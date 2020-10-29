@@ -75,8 +75,12 @@ namespace First_Webcrawler
                     string address_val = ws[abc.Substring(colCount-1, colCount) + rowCount].ToString();
                     //get value by row and column indexing
                     string index_val = ws.Rows[rowCount].Columns[colCount].ToString();
+
                     Console.WriteLine("Get value by Cell Addressing: n Value of cell ??: { 0}", address_val);
                     Console.WriteLine("Get value by Row and Column index: n Value of Row " + rowCount + " and Column " + colCount + ": { 0}", index_val);
+
+                    //read each cell's value to the array of URLs
+                    URLs[rowCount] = index_val;
                     Console.ReadKey();
                 }
             }
