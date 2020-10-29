@@ -1,0 +1,10 @@
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\obj\Debug\First Webcrawler.csprojAssemblyReference.cache
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\obj\Debug\First_Webcrawler.GUI.resources
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\obj\Debug\First_Webcrawler.Properties.Resources.resources
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\obj\Debug\First Webcrawler.csproj.GenerateResource.cache
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\obj\Debug\First Webcrawler.csproj.CoreCompileInputs.cache
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\bin\Debug\First Webcrawler.exe.config
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\bin\Debug\First Webcrawler.exe
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\bin\Debug\First Webcrawler.pdb
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\obj\Debug\First Webcrawler.exe
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\obj\Debug\First Webcrawler.pdb
