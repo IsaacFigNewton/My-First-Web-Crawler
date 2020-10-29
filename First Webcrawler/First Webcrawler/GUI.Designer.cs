@@ -7,12 +7,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using IronXL;
 
 namespace First_Webcrawler
 {
     public partial class GUI : Form
     {
-        //enter class variables here
+        //class variables
+        public static int NUMBER_OF_ENTRIES = 10;
+        public static String [] URLs = new String [NUMBER_OF_ENTRIES];
+        public static String[] contactURLs = new String[NUMBER_OF_ENTRIES];
+        //2-dimensional array of contact info in String form
+        //ex: int[,] array2D = new int[,] { {email1, phone1, other1}, {email2, phone2, other2}, {email3, phone3, other3}};
+        public static String[,] contactInfo = new String[NUMBER_OF_ENTRIES, NUMBER_OF_ENTRIES];
+        public static String PATH_OF_IO_DOC = "sample.xlsx";
+        public static String SHEET_NAME = "Sheet1";
+
 
         /// <summary>
         /// Required designer variable.
@@ -50,16 +60,39 @@ namespace First_Webcrawler
         private void buttonGetURLs_Click(object sender, EventArgs e)
         {
             //read the URLs from the excel doc to an array of strings
+            WorkBook wb = WorkBook.Load(PATH_OF_IO_DOC);
+            WorkSheet ws = wb.GetWorkSheet(SHEET_NAME);
+            String abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+            int rowCount = 1;
+            int colCount = NUMBER_OF_ENTRIES;
+
+            for (int i = 1; i <= rowCount; i++)
+            {
+                for (int j = 1; j <= colCount; j++)
+                {
+                    //get value by cell address
+                    string address_val = ws[abc.Substring(colCount-1, colCount) + rowCount].ToString();
+                    //get value by row and column indexing
+                    string index_val = ws.Rows[rowCount].Columns[colCount].ToString();
+                    Console.WriteLine("Get value by Cell Addressing: n Value of cell ??: { 0}", address_val);
+                    Console.WriteLine("Get value by Row and Column index: n Value of Row " + rowCount + " and Column " + colCount + ": { 0}", index_val);
+                    Console.ReadKey();
+                }
+            }
         }
 
         private void buttonLocateContacts_Click(object sender, EventArgs e)
         {
             //look for contacts page
+            String[] siteElementInfo;
         }
 
         private void buttonReadSites_Click(object sender, EventArgs e)
         {
             //read the information on the new site URL
+            //basically the same as buttonLocateContacts_Click(), but it stores the contact data collected
+
         }
 
         private void checkBoxEmail_CheckedChanged(object sender, EventArgs e)
@@ -91,4 +124,12 @@ namespace First_Webcrawler
         private CheckBox checkBoxEmail;
     }
 }
+
+/*
+Sources:
+    https://stackoverflow.com/questions/16160676/read-excel-data-line-by-line-with-c-sharp-net
+    https://www.wfmj.com/story/42504801/c-read-excel-file-example
+    https://ironsoftware.com/csharp/excel/tutorials/csharp-open-write-excel-file/
+
+*/
 
