@@ -12,10 +12,10 @@ namespace First_Webcrawler
 {
     public partial class GUI : Form
     {
-        public GUI()
-        {
-            InitializeComponent();
-        }
+        //public GUI()
+        //{
+        //    InitializeComponent();
+        //}
 
         private void InitializeComponent()
         {
