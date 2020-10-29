@@ -23,7 +23,9 @@ namespace First_Webcrawler
         {
             InitializeComponent();
             buttonReadSites.Click += new EventHandler(this.buttonReadSites_Click);
-            //contactTypes.CheckedChanged += new EventHandler(this.contactTypes.CheckedChanged);
+            checkBoxEmail.CheckedChanged += new EventHandler(this.checkBoxEmail_CheckedChanged);
+            checkBoxPhone.CheckedChanged += new EventHandler(this.checkBoxPhone_CheckedChanged);
+            checkBoxOther.CheckedChanged += new EventHandler(this.checkBoxOther_CheckedChanged);
             buttonLocateContacts.Click += new EventHandler(this.buttonLocateContacts_Click);
             buttonGetURLs.Click += new EventHandler(this.buttonGetURLs_Click);
         }
@@ -60,22 +62,33 @@ namespace First_Webcrawler
             //read the information on the new site URL
         }
 
-        private void contactTypes_CheckedChanged(object sender, EventArgs e)
+        private void checkBoxEmail_CheckedChanged(object sender, EventArgs e)
         {
             //do something here
         }
 
+        private void checkBoxPhone_CheckedChanged(object sender, EventArgs e)
+        {
+            //do something here
+        }
+
+        private void checkBoxOther_CheckedChanged(object sender, EventArgs e)
+        {
+            //do something here
+        }
         #endregion
 
         private System.Windows.Forms.TabControl pageControl;
         private System.Windows.Forms.TabPage page1;
         private System.Windows.Forms.TabPage page2;
-        private System.Windows.Forms.CheckedListBox contactTypes;
         private System.Windows.Forms.Button buttonReadSites;
         private System.Windows.Forms.Button buttonLocateContacts;
         private System.Windows.Forms.Button buttonGetURLs;
         private System.Windows.Forms.Label labelInfoToGather;
         private System.Windows.Forms.Label title1;
+        private CheckBox checkBoxOther;
+        private CheckBox checkBoxPhone;
+        private CheckBox checkBoxEmail;
     }
 }
 

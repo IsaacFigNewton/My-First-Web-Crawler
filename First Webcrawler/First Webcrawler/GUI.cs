@@ -21,13 +21,15 @@ namespace First_Webcrawler
         {
             this.pageControl = new System.Windows.Forms.TabControl();
             this.page1 = new System.Windows.Forms.TabPage();
-            this.contactTypes = new System.Windows.Forms.CheckedListBox();
             this.buttonReadSites = new System.Windows.Forms.Button();
             this.buttonLocateContacts = new System.Windows.Forms.Button();
             this.buttonGetURLs = new System.Windows.Forms.Button();
             this.labelInfoToGather = new System.Windows.Forms.Label();
             this.title1 = new System.Windows.Forms.Label();
             this.page2 = new System.Windows.Forms.TabPage();
+            this.checkBoxEmail = new System.Windows.Forms.CheckBox();
+            this.checkBoxPhone = new System.Windows.Forms.CheckBox();
+            this.checkBoxOther = new System.Windows.Forms.CheckBox();
             this.pageControl.SuspendLayout();
             this.page1.SuspendLayout();
             this.SuspendLayout();
@@ -44,7 +46,9 @@ namespace First_Webcrawler
             // 
             // page1
             // 
-            this.page1.Controls.Add(this.contactTypes);
+            this.page1.Controls.Add(this.checkBoxOther);
+            this.page1.Controls.Add(this.checkBoxPhone);
+            this.page1.Controls.Add(this.checkBoxEmail);
             this.page1.Controls.Add(this.buttonReadSites);
             this.page1.Controls.Add(this.buttonLocateContacts);
             this.page1.Controls.Add(this.buttonGetURLs);
@@ -57,19 +61,6 @@ namespace First_Webcrawler
             this.page1.TabIndex = 0;
             this.page1.Text = "page1";
             this.page1.UseVisualStyleBackColor = true;
-            // 
-            // contactTypes
-            // 
-            this.contactTypes.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.contactTypes.FormattingEnabled = true;
-            this.contactTypes.Items.AddRange(new object[] {
-            "Phone",
-            "Email",
-            "Other"});
-            this.contactTypes.Location = new System.Drawing.Point(105, 162);
-            this.contactTypes.Name = "contactTypes";
-            this.contactTypes.Size = new System.Drawing.Size(274, 264);
-            this.contactTypes.TabIndex = 5;
             // 
             // buttonReadSites
             // 
@@ -131,6 +122,39 @@ namespace First_Webcrawler
             this.page2.Text = "page2";
             this.page2.UseVisualStyleBackColor = true;
             // 
+            // checkBoxEmail
+            // 
+            this.checkBoxEmail.AutoSize = true;
+            this.checkBoxEmail.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxEmail.Location = new System.Drawing.Point(105, 161);
+            this.checkBoxEmail.Name = "checkBoxEmail";
+            this.checkBoxEmail.Size = new System.Drawing.Size(84, 29);
+            this.checkBoxEmail.TabIndex = 5;
+            this.checkBoxEmail.Text = "Email";
+            this.checkBoxEmail.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxPhone
+            // 
+            this.checkBoxPhone.AutoSize = true;
+            this.checkBoxPhone.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxPhone.Location = new System.Drawing.Point(105, 196);
+            this.checkBoxPhone.Name = "checkBoxPhone";
+            this.checkBoxPhone.Size = new System.Drawing.Size(93, 29);
+            this.checkBoxPhone.TabIndex = 6;
+            this.checkBoxPhone.Text = "Phone";
+            this.checkBoxPhone.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxOther
+            // 
+            this.checkBoxOther.AutoSize = true;
+            this.checkBoxOther.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxOther.Location = new System.Drawing.Point(105, 231);
+            this.checkBoxOther.Name = "checkBoxOther";
+            this.checkBoxOther.Size = new System.Drawing.Size(84, 29);
+            this.checkBoxOther.TabIndex = 7;
+            this.checkBoxOther.Text = "Other";
+            this.checkBoxOther.UseVisualStyleBackColor = true;
+            // 
             // GUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -144,8 +168,6 @@ namespace First_Webcrawler
             this.page1.PerformLayout();
             this.ResumeLayout(false);
 
-
-            InitializeComponent();
         }
     }
 }
