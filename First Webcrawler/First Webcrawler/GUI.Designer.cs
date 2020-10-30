@@ -14,7 +14,7 @@ namespace First_Webcrawler
     public partial class GUI : Form
     {
         //class variables
-        public static int NUMBER_OF_ENTRIES = 90;
+        public static int NUMBER_OF_ENTRIES = 91;
         public static String [] URLs = new String [NUMBER_OF_ENTRIES];
         public static String[] contactURLs = new String[NUMBER_OF_ENTRIES];
         //2-dimensional array of contact info in String form
@@ -68,18 +68,19 @@ namespace First_Webcrawler
             for (int i = 2; i < rowCount; i++)
             {
                 //skip header lines
-                if (!((rowCount == 13) || (rowCount == 16) || (rowCount == 31) || (rowCount == 32) || (rowCount == 33)))
+                if (!((i == 13) || (i == 16) || (i == 31) || (i == 32) || (i == 33)))
                 {
                     //get value by cell address
                     //string address_val = ws["A" + rowCount].ToString();
                     //get value by row and column indexing
-                    string index_val = ws.Rows[rowCount].Columns[1].ToString();
+                    string index_val = ws.Rows[i].Columns[0].ToString();
 
                     //read each cell's value to the array of URLs
-                    URLs[rowCount] = index_val;
+                    URLs[i] = index_val;
                     
                     //check to make sure correct values are collected
-                    Console.WriteLine(", '{0}'", index_val);
+                    Console.WriteLine(i +"'{0}'", index_val);
+
                 }
             }
         }
