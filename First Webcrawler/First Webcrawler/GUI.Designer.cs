@@ -14,14 +14,14 @@ namespace First_Webcrawler
     public partial class GUI : Form
     {
         //class variables
-        public static int NUMBER_OF_ENTRIES = 10;
+        public static int NUMBER_OF_ENTRIES = 90;
         public static String [] URLs = new String [NUMBER_OF_ENTRIES];
         public static String[] contactURLs = new String[NUMBER_OF_ENTRIES];
         //2-dimensional array of contact info in String form
         //ex: int[,] array2D = new int[,] { {email1, phone1, other1}, {email2, phone2, other2}, {email3, phone3, other3}};
         public static String[,] contactInfo = new String[NUMBER_OF_ENTRIES, NUMBER_OF_ENTRIES];
-        public static String PATH_OF_IO_DOC = "sample.xlsx";
-        public static String SHEET_NAME = "Sheet1";
+        public static String PATH_OF_IO_DOC = "C:\\Users\\Owner\\Desktop\\List of Camera Clubs.xlsx";
+        public static String SHEET_NAME = "Midwest (ND,SD,NE,KS,OK,TX,MN,I";
 
 
         /// <summary>
@@ -62,26 +62,24 @@ namespace First_Webcrawler
             //read the URLs from the excel doc to an array of strings
             WorkBook wb = WorkBook.Load(PATH_OF_IO_DOC);
             WorkSheet ws = wb.GetWorkSheet(SHEET_NAME);
-            String abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-            int rowCount = 1;
-            int colCount = NUMBER_OF_ENTRIES;
-
-            for (int i = 1; i <= rowCount; i++)
+            int rowCount = NUMBER_OF_ENTRIES;
+            //start at row 2 to skip the first header
+            for (int i = 2; i < rowCount; i++)
             {
-                for (int j = 1; j <= colCount; j++)
+                //skip header lines
+                if (!((rowCount == 13) || (rowCount == 16) || (rowCount == 31) || (rowCount == 32) || (rowCount == 33)))
                 {
                     //get value by cell address
-                    string address_val = ws[abc.Substring(colCount-1, colCount) + rowCount].ToString();
+                    //string address_val = ws["A" + rowCount].ToString();
                     //get value by row and column indexing
-                    string index_val = ws.Rows[rowCount].Columns[colCount].ToString();
-
-                    Console.WriteLine("Get value by Cell Addressing: n Value of cell ??: { 0}", address_val);
-                    Console.WriteLine("Get value by Row and Column index: n Value of Row " + rowCount + " and Column " + colCount + ": { 0}", index_val);
+                    string index_val = ws.Rows[rowCount].Columns[1].ToString();
 
                     //read each cell's value to the array of URLs
                     URLs[rowCount] = index_val;
-                    Console.ReadKey();
+                    
+                    //check to make sure correct values are collected
+                    Console.WriteLine(", '{0}'", index_val);
                 }
             }
         }
