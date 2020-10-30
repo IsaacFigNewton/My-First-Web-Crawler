@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using IronXL;
+using System.Net;
+using System.IO;
 
 namespace First_Webcrawler
 {
@@ -22,6 +24,9 @@ namespace First_Webcrawler
         public static String[,] contactInfo = new String[NUMBER_OF_ENTRIES, NUMBER_OF_ENTRIES];
         public static String PATH_OF_IO_DOC = "C:\\Users\\Owner\\Desktop\\List of Camera Clubs.xlsx";
         public static String SHEET_NAME = "Midwest (ND,SD,NE,KS,OK,TX,MN,I";
+
+        public static String[] MAIN_PAGE_SEARCH_KEYWORDS = { "Contact", "Contact Us" };
+        public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = { { "Email:", "Email-", "email:", "email-" }, { "Phone:", "Phone-", "phone:", "phone-" }, { "Other:", "Other-", "other:", "other-" } };
 
 
         /// <summary>
@@ -67,21 +72,16 @@ namespace First_Webcrawler
             //start at row 2 to skip the first header
             for (int i = 2; i < rowCount; i++)
             {
-                //skip header lines
-                if (!((i == 13) || (i == 16) || (i == 31) || (i == 32) || (i == 33)))
-                {
                     //get value by cell address
                     //string address_val = ws["A" + rowCount].ToString();
                     //get value by row and column indexing
-                    string index_val = ws.Rows[i].Columns[0].ToString();
+                    string index_val = ws.Rows[i].Columns[1].ToString();
 
                     //read each cell's value to the array of URLs
                     URLs[i] = index_val;
                     
                     //check to make sure correct values are collected
                     Console.WriteLine(i +"'{0}'", index_val);
-
-                }
             }
         }
 
@@ -112,6 +112,26 @@ namespace First_Webcrawler
         {
             //do something here
         }
+
+        //basic starter request code
+        static void Main(string[] args)
+        {
+            string html = string.Empty;
+            string url = "http://webcode.me";
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.UserAgent = "C# console client";
+
+            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            using (Stream stream = response.GetResponseStream())
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                html = reader.ReadToEnd();
+            }
+
+            Console.WriteLine(html);
+        }
+
         #endregion
 
         private System.Windows.Forms.TabControl pageControl;
@@ -133,6 +153,8 @@ Sources:
     https://stackoverflow.com/questions/16160676/read-excel-data-line-by-line-with-c-sharp-net
     https://www.wfmj.com/story/42504801/c-read-excel-file-example
     https://ironsoftware.com/csharp/excel/tutorials/csharp-open-write-excel-file/
+    http://howtouseexcel.net/how-to-extract-a-url-from-a-hyperlink-on-excel
+    http://zetcode.com/csharp/readwebpage/
 
 */
 
