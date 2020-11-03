@@ -11,3 +11,8 @@ C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webc
 C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\bin\Debug\IronXL.dll
 C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\bin\Debug\IronXL.xml
 C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\obj\Debug\First Webcrawler.csproj.CopyComplete
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\bin\Debug\Flurl.dll
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\bin\Debug\System.ValueTuple.dll
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\bin\Debug\Flurl.pdb
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\bin\Debug\Flurl.xml
+C:\Users\Owner\Documents\GitHub\My-First-Web-Crawler\First Webcrawler\First Webcrawler\bin\Debug\System.ValueTuple.xml

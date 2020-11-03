@@ -17,8 +17,9 @@ namespace First_Webcrawler
     {
         //class variables
         public static int NUMBER_OF_ENTRIES = 91;
-        public static String [] URLs = new String [NUMBER_OF_ENTRIES];
-        public static String[] contactURLs = new String[NUMBER_OF_ENTRIES];
+        public static int URLIndex = 1;
+        public static string [] URLs = new String [NUMBER_OF_ENTRIES];
+        public static string[] contactURLs = new String[NUMBER_OF_ENTRIES];
         //2-dimensional array of contact info in String form
         //ex: int[,] array2D = new int[,] { {email1, phone1, other1}, {email2, phone2, other2}, {email3, phone3, other3}};
         public static String[,] contactInfo = new String[NUMBER_OF_ENTRIES, NUMBER_OF_ENTRIES];
@@ -70,7 +71,7 @@ namespace First_Webcrawler
 
             int rowCount = NUMBER_OF_ENTRIES;
             //start at row 2 to skip the first header
-            for (int i = 2; i < rowCount; i++)
+            for (int i = 0; i < rowCount; i++)
             {
                     //get value by cell address
                     //string address_val = ws["A" + rowCount].ToString();
@@ -79,16 +80,70 @@ namespace First_Webcrawler
 
                     //read each cell's value to the array of URLs
                     URLs[i] = index_val;
-                    
-                    //check to make sure correct values are collected
-                    Console.WriteLine(i +"'{0}'", index_val);
+
+                //check to make sure correct values are collected
+                Console.WriteLine(i + "'{0}'", index_val);
             }
+            Console.WriteLine("Finished getting site URLs");
         }
 
         private void buttonLocateContacts_Click(object sender, EventArgs e)
         {
-            //look for contacts page
-            String[] siteElementInfo;
+            try { 
+                while (URLIndex < URLs.Length)
+                {
+                    string html;
+                    string url = URLs[URLIndex];
+
+                    //make sure the url is valid
+                    if (!(url == null || url == ""))
+                    {
+
+                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                        request.UserAgent = "C# console client";
+
+                        using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                        using (Stream stream = response.GetResponseStream())
+                        using (StreamReader reader = new StreamReader(stream))
+                        {
+                            html = reader.ReadToEnd();
+                        }
+
+                        getContactURL(html);
+
+                        //Console.WriteLine(html);
+                        //Console.WriteLine("");
+                        Console.WriteLine(URLIndex);
+                    }
+                    //increment the starting URLindex after an exception is seen so that it is incremented properly in the exception handlers
+                    URLIndex++;
+                }
+
+                Console.WriteLine("Finished getting sites' HTML");
+            }
+            //catch the null argument exception and let user try again, starting at the next URL
+            catch (ArgumentNullException ex)
+            {
+                Console.WriteLine("Null Argument Exception caught: {0}", ex, ", try again.");
+                getContactURL("");
+                URLIndex++;
+            }
+            //catch the web exception and let user start again, starting at the next URL
+            catch (WebException ex) {
+                Console.WriteLine("Web (unable to resolve host name) Exception caught: {0}", ex, ", try again.");
+                getContactURL("");
+                URLIndex++;
+            }
+        }
+
+        private static void getContactURL (string html)
+        {
+            //make sure the input is not empty
+            if (html != "")
+            {
+                //look through html for contacts page URL
+
+            }
         }
 
         private void buttonReadSites_Click(object sender, EventArgs e)
@@ -111,25 +166,6 @@ namespace First_Webcrawler
         private void checkBoxOther_CheckedChanged(object sender, EventArgs e)
         {
             //do something here
-        }
-
-        //basic starter request code
-        static void Main(string[] args)
-        {
-            string html = string.Empty;
-            string url = "http://webcode.me";
-
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            request.UserAgent = "C# console client";
-
-            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-            using (Stream stream = response.GetResponseStream())
-            using (StreamReader reader = new StreamReader(stream))
-            {
-                html = reader.ReadToEnd();
-            }
-
-            Console.WriteLine(html);
         }
 
         #endregion
