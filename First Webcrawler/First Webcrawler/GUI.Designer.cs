@@ -28,8 +28,11 @@ namespace First_Webcrawler
         public static String SHEET_NAME = "Midwest (ND,SD,NE,KS,OK,TX,MN,I";
 
         public static String[] MAIN_PAGE_SEARCH_KEYWORDS = { "Contact", "Contact Us", "contact", "CONTACT"};
-        public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = { { "Email:", "Email-", "email:", "email-" }, { "Phone:", "Phone-", "phone:", "phone-" }, { "Other:", "Other-", "other:", "other-" } };
-
+        public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = { { "Email:", "Email-", "email:", "e-mail:- " }, { "Phone:", "Phone-", "phone:", "phone-" }, { "Other:", "Other-", "other:", "web address:- " } };
+        //# of types of contact information in the array above
+        public static int NUMBER_OF_CONTACT_TYPES = 3;
+        //# of keyword items in each array within the array of contact keywords above
+        public static int NUMBER_OF_CONTACT_KEYWORDS = 4;
 
         /// <summary>
         /// Required designer variable.
@@ -85,7 +88,7 @@ namespace First_Webcrawler
                 //check to make sure correct values are collected
                 Console.WriteLine(i + "'{0}'", index_val);
             }
-            Console.WriteLine("Finished getting site URLs");
+            Console.WriteLine("Finished getting site URLs" + ", also an ArgumentOutOfRangeException is caused by line 286");
         }
 
         private void buttonLocateContacts_Click(object sender, EventArgs e)
@@ -122,7 +125,7 @@ namespace First_Webcrawler
                                 html = reader.ReadToEnd();
                             }
 
-                            getContactURL(html);
+                            getContactURLs(html);
 
                             //print first 4 chars of HTML as indication of proper functioning
                             Console.WriteLine(html.Substring(0, 15));
@@ -159,19 +162,19 @@ namespace First_Webcrawler
             catch (ArgumentNullException ex)
             {
                 Console.WriteLine("Null Argument Exception caught: {0}", ex, ", try again.");
-                getContactURL("");
+                getContactURLs("");
                 URLIndex++;
             }
             //catch the web exception and let user start again, starting at the next URL
             catch (WebException ex)
             {
                 Console.WriteLine("Web (unable to resolve host name) Exception caught: {0}", ex, ", try again.");
-                getContactURL("");
+                getContactURLs("");
                 URLIndex++;
             }
         }
 
-        private static void getContactURL (string html)
+        private static void getContactURLs (string html)
         {
             try
             {
@@ -185,7 +188,7 @@ namespace First_Webcrawler
                         for (int j = 0; j < MAIN_PAGE_SEARCH_KEYWORDS.Length; j++)
                         {
                             //if the site's HTML includes the keywords somewhere, look nearby it for the URL of the contacts page
-                            if (html.Substring(i, MAIN_PAGE_SEARCH_KEYWORDS[j].Length + i) == MAIN_PAGE_SEARCH_KEYWORDS[j])
+                            if (html.Substring(i, i + MAIN_PAGE_SEARCH_KEYWORDS[j].Length) == MAIN_PAGE_SEARCH_KEYWORDS[j])
                             {
                                 //debugging
                                 Console.WriteLine("Found contacts phrase in HTML at character #" + i);
@@ -210,7 +213,138 @@ namespace First_Webcrawler
         {
             //read the information on the new site URL
             //basically the same as buttonLocateContacts_Click(), but it stores the contact data collected
+            try
+            {                                                  //refactor to new method to run multiple times
+                URLIndex = 0;
 
+                while (URLIndex < URLs.Length)
+                {
+                    string html;
+                    string url = contactURLs[URLIndex];
+
+                    //make sure the url is there
+                    if (!(url == null || url == "" || url.Length == 0))
+                    {
+                            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                            request.UserAgent = "C# console client";
+
+                            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                            using (Stream stream = response.GetResponseStream())
+                            using (StreamReader reader = new StreamReader(stream))
+                            {
+                                html = reader.ReadToEnd();
+                            }
+
+                            getContacts(html);
+
+                            //print first 4 chars of HTML as indication of proper functioning
+                            Console.WriteLine(html.Substring(0, 15));
+                            Console.WriteLine(URLIndex);
+                            Console.WriteLine("");
+                    }
+                    //increment the starting URLindex after an exception is seen so that it is incremented properly in the exception handlers
+                    URLIndex++;
+                }
+
+                Console.WriteLine("Finished getting sites' contact information");
+            }
+            //catch the null argument exception and let user try again, starting at the next URL
+            catch (ArgumentNullException ex)
+            {
+                Console.WriteLine("Null Argument Exception caught: {0}", ex, ", try again.");
+                getContacts("");
+                URLIndex++;
+            }
+            //catch the web exception and let user start again, starting at the next URL
+            catch (WebException ex)
+            {
+                Console.WriteLine("Web (unable to resolve host name) Exception caught: {0}", ex, ", try again.");
+                getContacts("");
+                URLIndex++;
+            }
+        }
+
+        private static void getContacts(string html)
+        {
+            //try
+            //{
+                //make sure the input is not empty
+                if (html != "")
+                {
+                    //buffer range included in limiting statement (refactorable but I'm too lazy and this should be good enough)
+                    //if there's an ArgumentOutOfRangeException being caused, it's probably because of this next line of code (I usually get around it by adding the buffer range mentioned above)
+                    for (int i = 0; i < html.Length - 20; i++)
+                    {
+                        //read through all of CONTACTS_PAGE_SEARCH_KEYWORDS arrays
+                        for (int j = 0; j < NUMBER_OF_CONTACT_TYPES; j++)
+                        {
+                            //read through the items of the arrays of the array (ex, CONTACTS_PAGE_SEARCH_KEYWORDS array 1, item 3)
+                            for (int k = 0; k < NUMBER_OF_CONTACT_KEYWORDS; k++)                                         //problem here
+                            {
+                                //if the site's HTML includes the keywords somewhere, look nearby it for the contacts information
+                                //Apparently the line below also causes ArgumentOutOfRangeExceptions, for reasons unbeknownst to me
+                                if (html.Substring(i, i + CONTACTS_PAGE_SEARCH_KEYWORDS[j, k].Length) == CONTACTS_PAGE_SEARCH_KEYWORDS[j, k])
+                                {
+
+                                    //look through nearby html for contacts
+                                    int contactIndex = i + CONTACTS_PAGE_SEARCH_KEYWORDS[j, k].Length + 9;
+
+                                    //set the contact info to that found, checking to make sure that it's entering the right type of info
+                                    //email
+                                    if (j == 0)
+                                        contactInfo[URLIndex, 0] = "Email for site #" + URLIndex + " at index " + contactIndex;
+                                    //phone
+                                    if (j == 1)
+                                        contactInfo[URLIndex, 1] = "Phone for site #" + URLIndex + " at index " + contactIndex;
+                                    //other
+                                    if (j == 2)
+                                        contactInfo[URLIndex, 2] = "Other for site #" + URLIndex + " at index " + contactIndex;
+
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    //set contact info of the contact to show that there is no contact info for it
+                    //email
+                    contactInfo[URLIndex, 0] = "Somehow there was no html at this URL";
+                    //phone
+                    contactInfo[URLIndex, 1] = "Somehow there was no html at this URL";
+                    //other
+                    contactInfo[URLIndex, 2] = "Somehow there was no html at this URL";
+
+                    //debugging
+                    Console.WriteLine("Somehow there was no html at this URL");
+                }
+            //}
+            //catch (IndexOutOfRangeException ex)
+            //{
+            //    //set contact info of the contact to show that it couldn't get contact info for it
+            //    //email
+            //    contactInfo[URLIndex, 0] = "The index was out of bounds I guess";
+            //    //phone
+            //    contactInfo[URLIndex, 1] = "The index was out of bounds I guess";
+            //    //other
+            //    contactInfo[URLIndex, 2] = "The index was out of bounds I guess";
+
+            //    //debugging
+            //    Console.WriteLine("The index was out of bounds I guess");
+            //}
+            //catch (ArgumentOutOfRangeException ex)
+            //{
+            //    //set contact info of the contact to show that it couldn't get contact info for it
+            //    //email
+            //    contactInfo[URLIndex, 0] = "Looked for keyphrases outside of html for some reason";
+            //    //phone
+            //    contactInfo[URLIndex, 1] = "Looked for keyphrases outside of html for some reason";
+            //    //other
+            //    contactInfo[URLIndex, 2] = "Looked for keyphrases outside of html for some reason";
+
+            //    //debugging
+            //    Console.WriteLine("Looked for keyphrases outside of html for some reason");
+            //}
         }
 
         private void checkBoxEmail_CheckedChanged(object sender, EventArgs e)
@@ -241,6 +375,7 @@ namespace First_Webcrawler
         private CheckBox checkBoxOther;
         private CheckBox checkBoxPhone;
         private CheckBox checkBoxEmail;
+        private Button button1;
     }
 }
 

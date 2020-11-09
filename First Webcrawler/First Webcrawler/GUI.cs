@@ -30,6 +30,7 @@ namespace First_Webcrawler
             this.labelInfoToGather = new System.Windows.Forms.Label();
             this.title1 = new System.Windows.Forms.Label();
             this.page2 = new System.Windows.Forms.TabPage();
+            this.button1 = new System.Windows.Forms.Button();
             this.pageControl.SuspendLayout();
             this.page1.SuspendLayout();
             this.SuspendLayout();
@@ -46,6 +47,7 @@ namespace First_Webcrawler
             // 
             // page1
             // 
+            this.page1.Controls.Add(this.button1);
             this.page1.Controls.Add(this.checkBoxOther);
             this.page1.Controls.Add(this.checkBoxPhone);
             this.page1.Controls.Add(this.checkBoxEmail);
@@ -65,6 +67,8 @@ namespace First_Webcrawler
             // checkBoxOther
             // 
             this.checkBoxOther.AutoSize = true;
+            this.checkBoxOther.Checked = true;
+            this.checkBoxOther.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxOther.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxOther.Location = new System.Drawing.Point(105, 231);
             this.checkBoxOther.Name = "checkBoxOther";
@@ -76,6 +80,8 @@ namespace First_Webcrawler
             // checkBoxPhone
             // 
             this.checkBoxPhone.AutoSize = true;
+            this.checkBoxPhone.Checked = true;
+            this.checkBoxPhone.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxPhone.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxPhone.Location = new System.Drawing.Point(105, 196);
             this.checkBoxPhone.Name = "checkBoxPhone";
@@ -87,6 +93,8 @@ namespace First_Webcrawler
             // checkBoxEmail
             // 
             this.checkBoxEmail.AutoSize = true;
+            this.checkBoxEmail.Checked = true;
+            this.checkBoxEmail.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxEmail.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxEmail.Location = new System.Drawing.Point(105, 161);
             this.checkBoxEmail.Name = "checkBoxEmail";
@@ -98,17 +106,17 @@ namespace First_Webcrawler
             // buttonReadSites
             // 
             this.buttonReadSites.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonReadSites.Location = new System.Drawing.Point(866, 362);
+            this.buttonReadSites.Location = new System.Drawing.Point(866, 269);
             this.buttonReadSites.Name = "buttonReadSites";
             this.buttonReadSites.Size = new System.Drawing.Size(227, 84);
             this.buttonReadSites.TabIndex = 4;
-            this.buttonReadSites.Text = "Read Contact Information to Excel Sheet";
+            this.buttonReadSites.Text = "Read Contact Information";
             this.buttonReadSites.UseVisualStyleBackColor = true;
             // 
             // buttonLocateContacts
             // 
             this.buttonLocateContacts.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonLocateContacts.Location = new System.Drawing.Point(866, 250);
+            this.buttonLocateContacts.Location = new System.Drawing.Point(866, 177);
             this.buttonLocateContacts.Name = "buttonLocateContacts";
             this.buttonLocateContacts.Size = new System.Drawing.Size(227, 73);
             this.buttonLocateContacts.TabIndex = 3;
@@ -118,7 +126,7 @@ namespace First_Webcrawler
             // buttonGetURLs
             // 
             this.buttonGetURLs.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonGetURLs.Location = new System.Drawing.Point(866, 121);
+            this.buttonGetURLs.Location = new System.Drawing.Point(866, 87);
             this.buttonGetURLs.Name = "buttonGetURLs";
             this.buttonGetURLs.Size = new System.Drawing.Size(227, 73);
             this.buttonGetURLs.TabIndex = 2;
@@ -154,6 +162,16 @@ namespace First_Webcrawler
             this.page2.TabIndex = 1;
             this.page2.Text = "page2";
             this.page2.UseVisualStyleBackColor = true;
+            // 
+            // button1
+            // 
+            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button1.Location = new System.Drawing.Point(866, 372);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(227, 84);
+            this.button1.TabIndex = 8;
+            this.button1.Text = "Write Contact Information to Excel Sheet";
+            this.button1.UseVisualStyleBackColor = true;
             // 
             // GUI
             // 
