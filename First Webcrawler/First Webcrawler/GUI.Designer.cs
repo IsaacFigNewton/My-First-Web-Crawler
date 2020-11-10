@@ -17,6 +17,8 @@ namespace First_Webcrawler
     {
         //class variables
         public static int NUMBER_OF_ENTRIES = 91;
+        public static int READING_COLUMN = 1;
+        public static int WRITING_COLUMN = 8;
         public static int URLIndex = 1;
         public static string [] URLs = new String [NUMBER_OF_ENTRIES];
         public static string[] contactURLs = new String[NUMBER_OF_ENTRIES];
@@ -80,7 +82,7 @@ namespace First_Webcrawler
                     //get value by cell address
                     //string address_val = ws["A" + rowCount].ToString();
                     //get value by row and column indexing
-                    string index_val = ws.Rows[i].Columns[1].ToString();
+                    string index_val = ws.Rows[i].Columns[READING_COLUMN].ToString();
 
                     //read each cell's value to the array of URLs
                     URLs[i] = index_val;
@@ -88,7 +90,7 @@ namespace First_Webcrawler
                 //check to make sure correct values are collected
                 Console.WriteLine(i + "'{0}'", index_val);
             }
-            Console.WriteLine("Finished getting site URLs" + ", also an ArgumentOutOfRangeException is caused by line 286");
+            Console.WriteLine("Finished getting site URLs" + ", also an ArgumentOutOfRangeException is caused by lines 193 and 286");
         }
 
         private void buttonLocateContacts_Click(object sender, EventArgs e)
@@ -102,7 +104,7 @@ namespace First_Webcrawler
         private static void lookAtHTML()
         {
             try
-            {                                                  //refactor to new method to run multiple times
+            {
 
                 while (URLIndex < URLs.Length)
                 {
@@ -176,8 +178,8 @@ namespace First_Webcrawler
 
         private static void getContactURLs (string html)
         {
-            try
-            {
+            //try
+            //{
                 //make sure the input is not empty
                 if (html != "")
                 {
@@ -202,11 +204,11 @@ namespace First_Webcrawler
                 {
                     Console.WriteLine("Somehow there was no html at this URL");
                 }
-            }
-            catch (ArgumentOutOfRangeException ex)
-            {
-                Console.WriteLine("Looked for keyphrases outside of html for some reason.");
-            }
+            //}
+            //catch (ArgumentOutOfRangeException ex)
+            //{
+            //    Console.WriteLine("Looked for keyphrases outside of html for some reason.");
+            //}
         }
 
         private void buttonReadSites_Click(object sender, EventArgs e)
@@ -214,7 +216,6 @@ namespace First_Webcrawler
             //read the information on the new site URL
             //basically the same as buttonLocateContacts_Click(), but it stores the contact data collected
             try
-            {                                                  //refactor to new method to run multiple times
                 URLIndex = 0;
 
                 while (URLIndex < URLs.Length)
