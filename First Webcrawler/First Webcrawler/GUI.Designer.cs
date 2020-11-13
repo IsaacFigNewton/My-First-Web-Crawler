@@ -29,7 +29,8 @@ namespace First_Webcrawler
         public static String PATH_OF_IO_DOC = "C:\\Users\\Owner\\Desktop\\List of Camera Clubs.xlsx";
         public static String SHEET_NAME = "Midwest (ND,SD,NE,KS,OK,TX,MN,I";
 
-        public static String[] MAIN_PAGE_SEARCH_KEYWORDS = { "Contact", "Contact Us", "contact", "CONTACT"};
+        public static Boolean endOfBody = false;
+        public static String[] MAIN_PAGE_SEARCH_KEYWORDS = { "Contact", "contact", "CONTACT"};
         public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = { { "Email:", "Email-", "email:", "e-mail:- " }, { "Phone:", "Phone-", "phone:", "phone-" }, { "Other:", "Other-", "other:", "web address:- " } };
         //# of types of contact information in the array above
         public static int NUMBER_OF_CONTACT_TYPES = 3;
@@ -180,11 +181,13 @@ namespace First_Webcrawler
         {
             //try
             //{
+                endOfBody = false;
                 //make sure the input is not empty
                 if (html != "")
                 {
-                    //buffer range included in limiting statement (refactorable but I'm too lazy and this should be good enough)
-                    for (int i = 0; i < html.Length - 20; i++)
+                    int i = 0;
+                    //read through html until it 
+                    while (!endOfBody)
                     {
                         //read through all of MAIN_PAGE_SEARCH_KEYWORDS
                         for (int j = 0; j < MAIN_PAGE_SEARCH_KEYWORDS.Length; j++)
@@ -197,7 +200,14 @@ namespace First_Webcrawler
                                 //look through nearby html for contacts page URL
 
                             }
+                            //move on to the next HTML once it's finished reading through this HTML
+                            if (html.Substring(i, i + 7) == "</body>")
+                            {
+                                endOfBody = true;
+                                break;
+                            }
                         }
+                    i++;
                     }
                 }
                 else
@@ -215,7 +225,7 @@ namespace First_Webcrawler
         {
             //read the information on the new site URL
             //basically the same as buttonLocateContacts_Click(), but it stores the contact data collected
-            try
+            try {
                 URLIndex = 0;
 
                 while (URLIndex < URLs.Length)
@@ -226,22 +236,22 @@ namespace First_Webcrawler
                     //make sure the url is there
                     if (!(url == null || url == "" || url.Length == 0))
                     {
-                            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                            request.UserAgent = "C# console client";
+                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                        request.UserAgent = "C# console client";
 
-                            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                            using (Stream stream = response.GetResponseStream())
-                            using (StreamReader reader = new StreamReader(stream))
-                            {
-                                html = reader.ReadToEnd();
-                            }
+                        using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                        using (Stream stream = response.GetResponseStream())
+                        using (StreamReader reader = new StreamReader(stream))
+                        {
+                            html = reader.ReadToEnd();
+                        }
 
-                            getContacts(html);
+                        getContacts(html);
 
-                            //print first 4 chars of HTML as indication of proper functioning
-                            Console.WriteLine(html.Substring(0, 15));
-                            Console.WriteLine(URLIndex);
-                            Console.WriteLine("");
+                        //print first 4 chars of HTML as indication of proper functioning
+                        Console.WriteLine(html.Substring(0, 15));
+                        Console.WriteLine(URLIndex);
+                        Console.WriteLine("");
                     }
                     //increment the starting URLindex after an exception is seen so that it is incremented properly in the exception handlers
                     URLIndex++;
@@ -272,9 +282,9 @@ namespace First_Webcrawler
                 //make sure the input is not empty
                 if (html != "")
                 {
-                    //buffer range included in limiting statement (refactorable but I'm too lazy and this should be good enough)
-                    //if there's an ArgumentOutOfRangeException being caused, it's probably because of this next line of code (I usually get around it by adding the buffer range mentioned above)
-                    for (int i = 0; i < html.Length - 20; i++)
+                    int i = 0;
+                    //read through html until it 
+                    while (!endOfBody)
                     {
                         //read through all of CONTACTS_PAGE_SEARCH_KEYWORDS arrays
                         for (int j = 0; j < NUMBER_OF_CONTACT_TYPES; j++)
@@ -304,6 +314,14 @@ namespace First_Webcrawler
                                 }
                             }
                         }
+
+                        //move on to the next HTML once it's finished reading through this HTML
+                        if (html.Substring(i, i + 7) == "</body>")
+                        {
+                            endOfBody = true;
+                            break;
+                        }
+                        i++;
                     }
                 }
                 else
