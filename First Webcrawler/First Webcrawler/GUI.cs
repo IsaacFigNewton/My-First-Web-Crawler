@@ -21,6 +21,7 @@ namespace First_Webcrawler
         {
             this.pageControl = new System.Windows.Forms.TabControl();
             this.page1 = new System.Windows.Forms.TabPage();
+            this.buttonWriteContacts = new System.Windows.Forms.Button();
             this.checkBoxOther = new System.Windows.Forms.CheckBox();
             this.checkBoxPhone = new System.Windows.Forms.CheckBox();
             this.checkBoxEmail = new System.Windows.Forms.CheckBox();
@@ -30,7 +31,8 @@ namespace First_Webcrawler
             this.labelInfoToGather = new System.Windows.Forms.Label();
             this.title1 = new System.Windows.Forms.Label();
             this.page2 = new System.Windows.Forms.TabPage();
-            this.button1 = new System.Windows.Forms.Button();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
             this.pageControl.SuspendLayout();
             this.page1.SuspendLayout();
             this.SuspendLayout();
@@ -47,7 +49,9 @@ namespace First_Webcrawler
             // 
             // page1
             // 
-            this.page1.Controls.Add(this.button1);
+            this.page1.Controls.Add(this.label2);
+            this.page1.Controls.Add(this.label1);
+            this.page1.Controls.Add(this.buttonWriteContacts);
             this.page1.Controls.Add(this.checkBoxOther);
             this.page1.Controls.Add(this.checkBoxPhone);
             this.page1.Controls.Add(this.checkBoxEmail);
@@ -63,6 +67,17 @@ namespace First_Webcrawler
             this.page1.TabIndex = 0;
             this.page1.Text = "page1";
             this.page1.UseVisualStyleBackColor = true;
+            // 
+            // buttonWriteContacts
+            // 
+            this.buttonWriteContacts.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonWriteContacts.Location = new System.Drawing.Point(866, 372);
+            this.buttonWriteContacts.Name = "buttonWriteContacts";
+            this.buttonWriteContacts.Size = new System.Drawing.Size(227, 84);
+            this.buttonWriteContacts.TabIndex = 8;
+            this.buttonWriteContacts.Text = "Write Contact Information to Excel Sheet";
+            this.buttonWriteContacts.UseVisualStyleBackColor = true;
+            this.buttonWriteContacts.Visible = false;
             // 
             // checkBoxOther
             // 
@@ -163,15 +178,25 @@ namespace First_Webcrawler
             this.page2.Text = "page2";
             this.page2.UseVisualStyleBackColor = true;
             // 
-            // button1
+            // label1
             // 
-            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button1.Location = new System.Drawing.Point(866, 372);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(227, 84);
-            this.button1.TabIndex = 8;
-            this.button1.Text = "Write Contact Information to Excel Sheet";
-            this.button1.UseVisualStyleBackColor = true;
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(470, 406);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(390, 20);
+            this.label1.TabIndex = 9;
+            this.label1.Text = "DO NOT PRESS UNTIL DONE WITH OTHER PARTS";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.Location = new System.Drawing.Point(581, 436);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(279, 20);
+            this.label2.TabIndex = 10;
+            this.label2.Text = "(I turned visibility off for the time being)";
             // 
             // GUI
             // 
