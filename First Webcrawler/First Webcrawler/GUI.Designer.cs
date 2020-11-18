@@ -33,10 +33,12 @@ namespace First_Webcrawler
         public static String PATH_OF_IO_DOC = "C:\\Users\\Owner\\Desktop\\List of Camera Clubs.xlsx";
         public static String SHEET_NAME = "Midwest (ND,SD,NE,KS,OK,TX,MN,I";
 
-        public static Boolean endOfBody = false;
-        public static String[] MAIN_PAGE_SEARCH_KEYWORDS = { "Contact ", "contact ", "CONTACT"};
-        public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = { { "Email:", "Email-", "email:", "mailto:" }, { "Phone:", "Phone-", "phone:", "phone-" }, { "Other:", "Other-", "other:", "web address:- " } };
+        public static Boolean endOfBody = false; //
+        public static String[] MAIN_PAGE_SEARCH_KEYWORDS = {"Contact ", "contact ", "CONTACT" };
+        public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = { {"Email:", "Email-", "email:", "mailto:" }, { "Phone:", "tel:-", "phone:", "phone-" }, { "Other:", "Other-", "other:", "web address:- " } };
         //# of types of contact information in the array above
+        public static String[] URL_EXTENSIONS = {"contact_us", "contact-us", "contact", "map-and-contact", "info/contact" };
+        public static String[] URL_TYPE_EXTENSIONS = {"", ".htm", ".html", ".php", ".aspx"};
         public static int NUMBER_OF_CONTACT_TYPES = 3;
         //# of keyword items in each array within the array of contact keywords above
         public static int NUMBER_OF_CONTACT_KEYWORDS = 4;
@@ -100,6 +102,10 @@ namespace First_Webcrawler
                 Console.WriteLine(i + "'{0}'", index_val);
             }
             Console.WriteLine("Finished getting site URLs");
+            Console.WriteLine("Edit contact page search section to just try all combos of URL_EXTENSIONS and URL_TYPE_EXTENSIONS appended to original URL for contact page");
+            Console.WriteLine("Also, focus on boundary cases instead of all URLs");
+            Console.WriteLine("Also, go to sites linked by sinwp to look for contact page");
+
         }
 
         private void buttonLocateContacts_Click(object sender, EventArgs e)
