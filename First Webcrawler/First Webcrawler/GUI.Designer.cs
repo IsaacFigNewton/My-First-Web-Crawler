@@ -212,7 +212,7 @@ namespace First_Webcrawler
 
         private static string getURLFromHTML (int knownURLIndex, string html, String [] searchKeywords)
         {
-            string URLfound = "";
+            string URLFound = "";
             try
             {
                 endOfBody = false;
@@ -235,7 +235,7 @@ namespace First_Webcrawler
                             if (html.Substring(i, searchKeywords[j].Length).StartsWith(searchKeywords[j]))
                             {
                                 //debugging
-                                Console.WriteLine("Found contacts page phrase in HTML at character #" + i);
+                                Console.WriteLine("Found desired page phrase in HTML at character #" + i);
                                 if (i - CONTACT_SEGMENT_SIZE >= 0)
                                     Console.WriteLine(html.Substring(i - CONTACT_SEGMENT_SIZE, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
                                 else
@@ -275,7 +275,8 @@ namespace First_Webcrawler
                         //read through all of MAIN_PAGE_SEARCH_KEYWORDS
                         for (int j = 0; j < searchKeywords.Length; j++)
                         {
-                            startIndex = i + searchKeywords[j].Length;
+                            //look through nearby html for contacts page URL then set URLfound to that string
+                            startIndex = i + searchKeywords[j].Length + 1;
                             //if the site's HTML includes the keywords somewhere, look nearby it for the URL of the contacts page
                             if (html.Substring(i, searchKeywords[j].Length).StartsWith(searchKeywords[j]))
                             {
@@ -289,15 +290,15 @@ namespace First_Webcrawler
                                 }
                                 endIndex = startIndex + k + 1;
 
-
+                                URLFound = html.Substring(startIndex, endIndex - startIndex);
+                                
                                 //debugging
-                                Console.WriteLine("Found contacts page phrase in HTML at character #" + i);
-                                if (i - CONTACT_SEGMENT_SIZE >= 0)
-                                    Console.WriteLine(html.Substring(i - CONTACT_SEGMENT_SIZE, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
-                                else
-                                    Console.WriteLine(html.Substring(0, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
-
-                                //look through nearby html for contacts page URL then set URLfound to that string
+                                Console.WriteLine("Found desired page phrase in HTML at character #" + i);
+                                Console.WriteLine("Desired URL = " + URLFound);
+                                //if (i - CONTACT_SEGMENT_SIZE >= 0)
+                                //    Console.WriteLine(html.Substring(i - CONTACT_SEGMENT_SIZE, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
+                                //else
+                                //    Console.WriteLine(html.Substring(0, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
 
                             }
                             //move on to the next HTML once it's finished reading through this HTML
@@ -320,7 +321,7 @@ namespace First_Webcrawler
                 }
 
                 //return the url
-                return URLfound;
+                return URLFound;
             }
             catch (ArgumentOutOfRangeException ex)
             {
@@ -329,7 +330,7 @@ namespace First_Webcrawler
                 Console.WriteLine("");
                 
                 //return the url
-                return URLfound;
+                return URLFound;
             }
         }
 
@@ -507,7 +508,7 @@ namespace First_Webcrawler
             {
                 if (segment.Substring(i, 5) == "href=")
                 {
-                    startIndex = i + 6;
+                    startIndex = i + 6 + 1;
 
                     int k = 0;
                     while (k < segment.Length)
@@ -524,7 +525,7 @@ namespace First_Webcrawler
                 }
                 else if (segment.Substring(i, 4) == "src=")
                 {
-                    startIndex = i + 5;
+                    startIndex = i + 5 + 1;
                     
                     int k = 0;
                     while (k < segment.Length)
