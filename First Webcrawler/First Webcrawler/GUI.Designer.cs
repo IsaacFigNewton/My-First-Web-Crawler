@@ -44,11 +44,11 @@ namespace First_Webcrawler
         public static int NUMBER_OF_CONTACT_KEYWORDS = 4;
 
         //if the website's link goes to something including one of the following phrases(paired with an extension from the URL_TYPE_EXTENSIONS list), just remove it and then brute force the contact URL with the following extension words/phrases
-        public static String[] URL_REMOVE_EXTENSIONS = {"default" };
+        public static String[] URL_REMOVE_EXTENSIONS = {"default", "index" };
         //in case the scraper can't get the contact page for whatever reason, use the below information to brute force the contact URL
         public static String[] URL_PRE_EXTENSIONS = {"", "Club/", "info/", "page/" };
-        public static String[] URL_EXTENSIONS = {"contact_us", "contact-us", "contact", "contact_us", "about-us", "about", "join-us", "contactus"};
-        public static String[] URL_TYPE_EXTENSIONS = {"", ".htm", ".html", ".php", ".aspx", ".shtml"};
+        public static String[] URL_EXTENSIONS = {"contact_us", "contact-us", "contact", "Contact", "about-us", "about", "contact_us", "join-us", "contactus"};
+        public static String[] URL_TYPE_EXTENSIONS = {"", ".html", ".htm", ".aspx", ".php", ".shtml"};
         //if unable to find contact page this way, look for facebook link, go there, and then append "about"
 
         //Contact phrase html segment
@@ -86,7 +86,8 @@ namespace First_Webcrawler
 
         #region Windows Form Designer generated code
 
-        //screen 1
+        //                                                              Beginning of source url locating/gathering section
+        //*****************************************************************************************************************************************************************************************
 
         private void buttonGetURLs_Click(object sender, EventArgs e)
         {
@@ -115,6 +116,9 @@ namespace First_Webcrawler
             Console.WriteLine("Also, go to sites linked by sinwp to look for contact page");
 
         }
+
+        //                                                              End of source url locating/gathering section, beginning of main page url locating/gathering section
+        //*****************************************************************************************************************************************************************************************
 
         private void buttonLocateContacts_Click(object sender, EventArgs e)
         {
@@ -234,6 +238,9 @@ namespace First_Webcrawler
                             //if the site's HTML includes the keywords somewhere, look nearby it for the URL of the contacts page
                             if (html.Substring(i, searchKeywords[j].Length).StartsWith(searchKeywords[j]))
                             {
+                                //find the URL then set URLFound to it
+                                URLFound = "";
+
                                 //debugging
                                 Console.WriteLine("Found desired page phrase in HTML at character #" + i);
                                 if (i - CONTACT_SEGMENT_SIZE >= 0)
@@ -292,6 +299,9 @@ namespace First_Webcrawler
 
                                 URLFound = html.Substring(startIndex, endIndex - startIndex);
                                 
+                                //Look for 
+                                //Add google searching functiionality
+
                                 //debugging
                                 Console.WriteLine("Found desired page phrase in HTML at character #" + i);
                                 Console.WriteLine("Desired URL = " + URLFound);
@@ -334,6 +344,9 @@ namespace First_Webcrawler
             }
         }
 
+        //                                                              End of main page url locating/gathering section, beginning of contact locating/gathering section
+        //*****************************************************************************************************************************************************************************************
+
         private void buttonReadSites_Click(object sender, EventArgs e)
         {
             //read the information on the new site URL
@@ -343,15 +356,11 @@ namespace First_Webcrawler
 
                 while (URLIndex < URLs.Length)
                 {
-                    string html;
                     string url = contactURLs[URLIndex];
 
-                    //make sure the url is there
-                    if (!(url == null || url == "" || url.Length == 0))
-                    {
-                        html = getHTML(url);
-                        getContacts(html);
-                    }
+                    //make sure the url is defined
+                    if (url != null)
+                        getContactsFromURL(url);
 
                     //increment the starting URLindex after an exception is seen so that it is incremented properly in the exception handlers
                     URLIndex++;
@@ -366,7 +375,7 @@ namespace First_Webcrawler
             {
                 Console.WriteLine(URLIndex);
                 Console.WriteLine("Null Argument Exception caught, try again.");
-                getContacts("");
+                getContactsFromURL("");
                 URLIndex++;
             }
             //catch the web exception and let user start again, starting at the next URL
@@ -374,83 +383,125 @@ namespace First_Webcrawler
             {
                 Console.WriteLine(URLIndex);
                 Console.WriteLine("Web (unable to resolve host name) Exception caught, try again.");
-                getContacts("");
+                getContactsFromURL("");
                 URLIndex++;
             }
         }
 
-        private static void getContacts(string html)
+        private static void getContactsFromURL(string url)
         {
+            
             try
             {
-                //make sure the input is not empty
-                if (html != "")
+                //make sure the url is not empty
+                if (url != "")
                 {
-                    //Show the webpage currently being read
-                    Console.WriteLine(URLIndex);
-                    //print first 4 chars of HTML as indication of proper functioning
-                    Console.WriteLine(html.Substring(0, 15));
-
-                    int i = 0;
-                    //read through html until it 
-                    while (!endOfBody)
+                    string html = getHTML(url);
+                    //make sure the input is not empty
+                    if (html != "")
                     {
-                        //read through all of CONTACTS_PAGE_SEARCH_KEYWORDS arrays
-                        for (int j = 0; j < NUMBER_OF_CONTACT_TYPES; j++)
-                        {
-                            //read through the items of the arrays of the array (ex, CONTACTS_PAGE_SEARCH_KEYWORDS array 1, item 3)
-                            for (int k = 0; k < NUMBER_OF_CONTACT_KEYWORDS; k++)                                         //problem here
-                            {
-                                //if the site's HTML includes the keywords somewhere, look nearby it for the contacts information
-                                if (html.Substring(i, CONTACTS_PAGE_SEARCH_KEYWORDS[j, k].Length).StartsWith(CONTACTS_PAGE_SEARCH_KEYWORDS[j, k]))
-                                {
-                                    //look through nearby html for contacts
-                                    String contactHTMLSegment;
-                                    if (i - CONTACT_SEGMENT_SIZE >= 0)
-                                    contactHTMLSegment = html.Substring(i - CONTACT_SEGMENT_SIZE, CONTACT_SEGMENT_SIZE + MAIN_PAGE_SEARCH_KEYWORDS[j].Length);
-                                    else
-                                    contactHTMLSegment = html.Substring(0, CONTACT_SEGMENT_SIZE + MAIN_PAGE_SEARCH_KEYWORDS[j].Length);
+                        //Show the webpage currently being read
+                        Console.WriteLine(URLIndex);
+                        //print first 4 chars of HTML as indication of proper functioning
+                        Console.WriteLine(html.Substring(0, 15));
 
-                                    //set the contact info to that found, checking to make sure that it's entering the right type of info
-                                    //email
-                                    if (j == 0)
+                        int i = 0;
+                        //read through html until it 
+                        while (!endOfBody)
+                        {
+                            //read through all of CONTACTS_PAGE_SEARCH_KEYWORDS arrays
+                            for (int j = 0; j < NUMBER_OF_CONTACT_TYPES; j++)
+                            {
+                                //read through the items of the arrays of the array (ex, CONTACTS_PAGE_SEARCH_KEYWORDS array 1, item 3)
+                                for (int k = 0; k < NUMBER_OF_CONTACT_KEYWORDS; k++)                                         //problem here
+                                {
+                                    //if the site's HTML includes the keywords somewhere, look nearby it for the contacts information
+                                    if (html.Substring(i, CONTACTS_PAGE_SEARCH_KEYWORDS[j, k].Length).StartsWith(CONTACTS_PAGE_SEARCH_KEYWORDS[j, k]))
                                     {
-                                        contactInfo[URLIndex, 0] = getContactFromHTMLSegment(contactHTMLSegment);
-                                        Console.WriteLine("Found EMAIL contact phrase in HTML at character #" + i);
-                                        Console.WriteLine(contactHTMLSegment);
-                                    }
-                                    //phone
-                                    if (j == 1)
-                                    {
-                                        contactInfo[URLIndex, 1] = getContactFromHTMLSegment(contactHTMLSegment);
-                                        Console.WriteLine("Found PHONE contact phrase in HTML at character #" + i);
-                                        Console.WriteLine(contactHTMLSegment);
-                                    }
-                                    //other
-                                    if (j == 2)
-                                    {
-                                        contactInfo[URLIndex, 2] = getContactFromHTMLSegment(contactHTMLSegment);
-                                        Console.WriteLine("Found OTHER contact phrase in HTML at character #" + i);
-                                        Console.WriteLine(contactHTMLSegment);
+                                        //look through nearby html for contacts
+                                        String contactHTMLSegment;
+                                        if (i - CONTACT_SEGMENT_SIZE >= 0)
+                                            contactHTMLSegment = html.Substring(i - CONTACT_SEGMENT_SIZE, CONTACT_SEGMENT_SIZE + MAIN_PAGE_SEARCH_KEYWORDS[j].Length);
+                                        else
+                                            contactHTMLSegment = html.Substring(0, CONTACT_SEGMENT_SIZE + MAIN_PAGE_SEARCH_KEYWORDS[j].Length);
+
+                                        //set the contact info to that found, checking to make sure that it's entering the right type of info
+                                        //email
+                                        if (j == 0)
+                                        {
+                                            contactInfo[URLIndex, 0] = getContactURLFromHTMLSegment(contactHTMLSegment);
+                                            Console.WriteLine("Found EMAIL contact phrase in HTML at character #" + i);
+                                            Console.WriteLine(contactHTMLSegment);
+                                        }
+                                        //phone
+                                        if (j == 1)
+                                        {
+                                            contactInfo[URLIndex, 1] = getContactURLFromHTMLSegment(contactHTMLSegment);
+                                            Console.WriteLine("Found PHONE contact phrase in HTML at character #" + i);
+                                            Console.WriteLine(contactHTMLSegment);
+                                        }
+                                        //other
+                                        if (j == 2)
+                                        {
+                                            contactInfo[URLIndex, 2] = getContactURLFromHTMLSegment(contactHTMLSegment);
+                                            Console.WriteLine("Found OTHER contact phrase in HTML at character #" + i);
+                                            Console.WriteLine(contactHTMLSegment);
+                                        }
                                     }
                                 }
                             }
+
+                            //move on to the next HTML once it's finished reading through this HTML
+                            if (html.Substring(i, 14).StartsWith("</body>"))
+                            {
+                                endOfBody = true;
+                                break;
+                            }
+
+                            i++;
                         }
 
-                        //move on to the next HTML once it's finished reading through this HTML
-                        if (html.Substring(i, 14).StartsWith("</body>"))
-                        {
-                            endOfBody = true;
-                            break;
-                        }
-
-                        i++;
+                        Console.WriteLine("");
                     }
+                    else
+                    {
+                        //set contact info of the contact to show that there is no contact info for it
+                        //email
+                        contactInfo[URLIndex, 0] = "Somehow there was no html at this URL";
+                        //phone
+                        contactInfo[URLIndex, 1] = "Somehow there was no html at this URL";
+                        //other
+                        contactInfo[URLIndex, 2] = "Somehow there was no html at this URL";
 
-                    Console.WriteLine("");
+                        //debugging
+                        Console.WriteLine(URLIndex);
+                        Console.WriteLine("Somehow there was no html at this URL");
+                        Console.WriteLine("");
+                    }
+                }
+                //if the url provided is empty
+                else if (url != "Sorry, I couldn't find a contacts page.")
+                {
+                    //getting the url:
+                        //check for a facebook link
+                        contactURLs[URLIndex] = checkForFacebookLink(url);
+
+                        //if that fails, try brute-forcing the contact page url
+                        contactURLs[URLIndex] = tryBruteForce(url);
+
+                        //if that fails, try googling the club based on the url stored in the respective URLs[] index
+                        contactURLs[URLIndex] = tryGoogling(url);
+
+                    //getting the contacts from the url or giving up
+                    if (!(contactURLs[URLIndex] == "" || contactURLs[URLIndex].Length == 0))
+                        getContactsFromURL(url);
+                    else
+                        contactURLs[URLIndex] = "Sorry, I couldn't find a contacts page.";
+
                 }
                 else
                 {
+                    //it should do this if no contacts page url is provided or found
                     //set contact info of the contact to show that there is no contact info for it
                     //email
                     contactInfo[URLIndex, 0] = "Somehow there was no html at this URL";
@@ -458,11 +509,6 @@ namespace First_Webcrawler
                     contactInfo[URLIndex, 1] = "Somehow there was no html at this URL";
                     //other
                     contactInfo[URLIndex, 2] = "Somehow there was no html at this URL";
-
-                    //debugging
-                    Console.WriteLine(URLIndex);
-                    Console.WriteLine("Somehow there was no html at this URL");
-                    Console.WriteLine("");
                 }
             }
             catch (IndexOutOfRangeException ex)
@@ -498,7 +544,7 @@ namespace First_Webcrawler
             }
         }
 
-        private static String getContactFromHTMLSegment (String segment)
+        private static String getContactURLFromHTMLSegment (String segment)
         {
             String contact = "";
             int startIndex = 0;
@@ -543,6 +589,42 @@ namespace First_Webcrawler
             }
             return contact;
         }
+
+        private static String checkForFacebookLink (String url)
+        {
+            String[] searchKeywords = { };
+            string html = getHTML(url);
+            string foundURL = "";
+
+            getURLFromHTML(-1, html, searchKeywords);
+
+            return foundURL;
+        }
+
+        private static String tryBruteForce (String url)
+        {
+            String[] searchKeywords = { };
+            string html = getHTML(url);
+            string foundURL = "";
+
+            getURLFromHTML(-1, html, searchKeywords);
+
+            return foundURL;
+        }
+
+        private static String tryGoogling (String url)
+        {
+            String[] searchKeywords = { };
+            string html = getHTML(url);
+            string foundURL = "";
+
+            getURLFromHTML(-1, html, searchKeywords);
+
+            return foundURL;
+        }
+
+        //                                                                               End of contact locating/gathering section, beginning of contact info writing section
+        //*************************************************************************************************************************************************************************
 
         private void buttonWriteContacts_Click(object sender, EventArgs e)
         {
