@@ -37,18 +37,18 @@ namespace First_Webcrawler
 
         public static Boolean endOfBody = false; //
         public static String[] MAIN_PAGE_SEARCH_KEYWORDS = {"Contact ", "contact ", "CONTACT" };
-        public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = { {"EMAIL", "Email", "email", "mailto:" }, { "PHONE", "Phone", "phone", "tel:-" }, { "OTHER", "Other", "other", "web address:- " } };
+        public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = { {"president", "Email", "email", "mailto:", "Email Address:" }, { "PHONE", "Phone", "phone", "tel:-", "" }, { "Address", "address", "at", "address:", "" }, { "Location", "meet", "location", "", "" } };
         //# of types of contact information in the array above
         public static int NUMBER_OF_CONTACT_TYPES = 3;
         //# of keyword items in each array within the array of contact keywords above
         public static int NUMBER_OF_CONTACT_KEYWORDS = 4;
 
         //if the website's link goes to something including one of the following phrases(paired with an extension from the URL_TYPE_EXTENSIONS list), just remove it and then brute force the contact URL with the following extension words/phrases
-        public static String[] URL_REMOVE_EXTENSIONS = {"default", "index" };
+        public static String[] URL_REMOVE_EXTENSIONS = {"default", "index", "Default" };
         //in case the scraper can't get the contact page for whatever reason, use the below information to brute force the contact URL
-        public static String[] URL_PRE_EXTENSIONS = {"", "Club/", "info/", "page/" };
-        public static String[] URL_EXTENSIONS = {"contact_us", "contact-us", "contact", "Contact", "about-us", "about", "contact_us", "join-us", "contactus"};
-        public static String[] URL_TYPE_EXTENSIONS = {"", ".html", ".htm", ".aspx", ".php", ".shtml"};
+        public static String[] URL_PRE_EXTENSIONS = {"", "about/", "Club/", "info/", "page/", "#" };
+        public static String[] URL_EXTENSIONS = {"contact", "contact-us", "contact_us",  "Contact", "about-us", "about", "contact_us", "contact-form", "join-us", "contactus", "About-Us"};
+        public static String[] URL_TYPE_EXTENSIONS = {"", ".html", ".htm", ".aspx", ".php", ".shtml", ".asp"};
         //if unable to find contact page this way, look for facebook link, go there, and then append "about"
 
         //Contact phrase html segment
@@ -169,7 +169,7 @@ namespace First_Webcrawler
                     }
 
                     Console.WriteLine("");
-                    Console.WriteLine("Finished getting sites' HTML");
+                    Console.WriteLine("Finished getting sites' HTML/main page URLs");
                     Console.WriteLine("");
                 }
                 //catch the null argument exception and let user try again, starting at the next URL
@@ -612,21 +612,51 @@ namespace First_Webcrawler
             return foundURL;
         }
 
-        private static String tryGoogling (String url)
+        private static String tryGoogling ()
         {
+            //get club text
+            WorkBook workbook = WorkBook.Load(PATH_OF_IO_DOC);
+            WorkSheet worksheet = workbook.GetWorkSheet(SHEET_NAME);
+            //get value by row and column indexing
+            string clubGooglePhrase = worksheet.Rows[URLIndex].Columns[READING_COLUMN-1].ToString();
+            //check to make sure correct value is collected
+            Console.WriteLine(URLIndex + "'{0}'", clubGooglePhrase);
+
+            //then assemble search URL
+            String url = assembleGoogleURL(clubGooglePhrase);
+
+            //then look for the first search result's URL
             String[] searchKeywords = { };
             string html = getHTML(url);
             string foundURL = "";
-
             getURLFromHTML(-1, html, searchKeywords);
 
             return foundURL;
         }
 
-        //                                                                               End of contact locating/gathering section, beginning of contact info writing section
-        //*************************************************************************************************************************************************************************
+        private static String assembleGoogleURL(String clubPhrase)
+        {
+            String[] clubPhraseWords = {};
+            for (int i = 0; i < clubPhraseWords.Length; i++)
+            {
+                //parse each clubPhraseWords entry by the ' ' (space) character
+            }
 
-        private void buttonWriteContacts_Click(object sender, EventArgs e)
+            //assemble google query url
+            String url = "https://www.google.com/search?q=" + '"';
+            for (int i = 0; i < clubPhraseWords.Length; i++)
+            {
+                url += clubPhraseWords[i] + "+";
+            }
+            url = url.Substring(0, url.Length - 1) + '"';
+
+            return url;
+        }
+
+            //                                                                               End of contact locating/gathering section, beginning of contact info writing section
+            //*************************************************************************************************************************************************************************
+
+            private void buttonWriteContacts_Click(object sender, EventArgs e)
         {
             //read the URLs from the excel doc to an array of strings
             WorkBook workbook = WorkBook.Load(PATH_OF_IO_DOC);
@@ -695,6 +725,7 @@ Sources:
     http://howtouseexcel.net/how-to-extract-a-url-from-a-hyperlink-on-excel
     http://zetcode.com/csharp/readwebpage/
     https://docs.microsoft.com/en-us/dotnet/api/system.string.startswith?view=net-5.0#System_String_StartsWith_System_String_
+    An excel sheet from a friend to get some practice and testing data for the program
 
 */
 
