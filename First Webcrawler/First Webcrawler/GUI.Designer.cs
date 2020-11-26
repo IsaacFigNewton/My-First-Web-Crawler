@@ -46,7 +46,7 @@ namespace First_Webcrawler
         //if the website's link goes to something including one of the following phrases(paired with an extension from the URL_TYPE_EXTENSIONS list), just remove it and then brute force the contact URL with the following extension words/phrases
         public static String[] URL_REMOVE_EXTENSIONS = {"default", "index", "Default" };
         //in case the scraper can't get the contact page for whatever reason, use the below information to brute force the contact URL
-        public static String[] URL_PRE_EXTENSIONS = {"", "about/", "Club/", "info/", "page/", "#" };
+        public static String[] URL_PRE_EXTENSIONS = {"", "about/", "Club/", "info/", "page/" };
         public static String[] URL_EXTENSIONS = {"contact", "contact-us", "contact_us",  "Contact", "about-us", "about", "contact_us", "contact-form", "join-us", "contactus", "About-Us"};
         public static String[] URL_TYPE_EXTENSIONS = {"", ".html", ".htm", ".aspx", ".php", ".shtml", ".asp"};
         //if unable to find contact page this way, look for facebook link, go there, and then append "about"
@@ -216,7 +216,7 @@ namespace First_Webcrawler
 
         private static string getURLFromHTML (int knownURLIndex, string html, String [] searchKeywords)
         {
-            string URLFound = "";
+            string foundURL = "";
             try
             {
                 endOfBody = false;
@@ -229,17 +229,17 @@ namespace First_Webcrawler
                     Console.WriteLine(html.Substring(0, 15 + 20));
 
                     int i = 0;
-                    //read through html until it 
+                    //read through html until it reaches the end of the body
                     while (!endOfBody)
                     {
-                        //read through all of MAIN_PAGE_SEARCH_KEYWORDS
+                        //read through all of the search keywords
                         for (int j = 0; j < searchKeywords.Length; j++)
                         {
                             //if the site's HTML includes the keywords somewhere, look nearby it for the URL of the contacts page
                             if (html.Substring(i, searchKeywords[j].Length).StartsWith(searchKeywords[j]))
                             {
-                                //find the URL then set URLFound to it
-                                URLFound = "";
+                                //find the URL then set foundURL to it
+                                foundURL = getContactURLFromHTMLSegment(html.Substring(i-100, 200));
 
                                 //debugging
                                 Console.WriteLine("Found desired page phrase in HTML at character #" + i);
@@ -248,7 +248,7 @@ namespace First_Webcrawler
                                 else
                                     Console.WriteLine(html.Substring(0, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
 
-                                //look through nearby html for contacts page URL then set URLfound to that string
+                                //look through nearby html for contacts page URL then set foundURL to that string
 
                             }
                             //move on to the next HTML once it's finished reading through this HTML
@@ -282,7 +282,7 @@ namespace First_Webcrawler
                         //read through all of MAIN_PAGE_SEARCH_KEYWORDS
                         for (int j = 0; j < searchKeywords.Length; j++)
                         {
-                            //look through nearby html for contacts page URL then set URLfound to that string
+                            //look through nearby html for contacts page URL then set foundURL to that string
                             startIndex = i + searchKeywords[j].Length + 1;
                             //if the site's HTML includes the keywords somewhere, look nearby it for the URL of the contacts page
                             if (html.Substring(i, searchKeywords[j].Length).StartsWith(searchKeywords[j]))
@@ -297,14 +297,14 @@ namespace First_Webcrawler
                                 }
                                 endIndex = startIndex + k + 1;
 
-                                URLFound = html.Substring(startIndex, endIndex - startIndex);
+                                foundURL = html.Substring(startIndex, endIndex - startIndex);
                                 
                                 //Look for 
                                 //Add google searching functiionality
 
                                 //debugging
                                 Console.WriteLine("Found desired page phrase in HTML at character #" + i);
-                                Console.WriteLine("Desired URL = " + URLFound);
+                                Console.WriteLine("Desired URL = " + foundURL);
                                 //if (i - CONTACT_SEGMENT_SIZE >= 0)
                                 //    Console.WriteLine(html.Substring(i - CONTACT_SEGMENT_SIZE, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
                                 //else
@@ -331,7 +331,7 @@ namespace First_Webcrawler
                 }
 
                 //return the url
-                return URLFound;
+                return foundURL;
             }
             catch (ArgumentOutOfRangeException ex)
             {
@@ -340,7 +340,7 @@ namespace First_Webcrawler
                 Console.WriteLine("");
                 
                 //return the url
-                return URLFound;
+                return foundURL;
             }
         }
 
@@ -490,7 +490,7 @@ namespace First_Webcrawler
                         contactURLs[URLIndex] = tryBruteForce(url);
 
                         //if that fails, try googling the club based on the url stored in the respective URLs[] index
-                        contactURLs[URLIndex] = tryGoogling(url);
+                        contactURLs[URLIndex] = tryGoogling();
 
                     //getting the contacts from the url or giving up
                     if (!(contactURLs[URLIndex] == "" || contactURLs[URLIndex].Length == 0))
@@ -592,22 +592,45 @@ namespace First_Webcrawler
 
         private static String checkForFacebookLink (String url)
         {
-            String[] searchKeywords = { };
+            String[] searchKeywords = { "https://www.facebook.com/" };
             string html = getHTML(url);
-            string foundURL = "";
-
-            getURLFromHTML(-1, html, searchKeywords);
+            string foundURL = getURLFromHTML(-1, html, searchKeywords);
 
             return foundURL;
         }
 
         private static String tryBruteForce (String url)
         {
-            String[] searchKeywords = { };
-            string html = getHTML(url);
-            string foundURL = "";
+            //find contacts page url given the main page url
+            string baseURL = url;
+            string foundURL = url;
 
-            getURLFromHTML(-1, html, searchKeywords);
+            //check for/remove any removable phrases in the url
+            for (int i = 0; i < URL_REMOVE_EXTENSIONS.Length; i++)
+            {
+                //if the last bit of the home page URL is a known removable phrase
+                if (baseURL.Substring(baseURL.Length - URL_REMOVE_EXTENSIONS[i].Length) == URL_REMOVE_EXTENSIONS[i]) {
+                    //for each removable extension, reset the baseURL and set the foundURL to the baseURL before the removable phrase
+                    baseURL = baseURL.Substring(0, baseURL.Length - URL_REMOVE_EXTENSIONS[i].Length);
+                    foundURL = baseURL.Substring(0, baseURL.Length - URL_REMOVE_EXTENSIONS[i].Length);
+                    //break statement just to speed things up and quit if/when a removable extension is found
+                    break;
+                }
+            }
+
+            //brute force all possible contact urls until one works
+            for (int i = 0; i < URL_PRE_EXTENSIONS.Length; i++)
+            {
+                for (int j = 0; j < URL_EXTENSIONS.Length; j++)
+                {
+                    for (int k = 0; k < URL_TYPE_EXTENSIONS.Length; k++)
+                    {
+                        foundURL = baseURL + URL_PRE_EXTENSIONS[i] + URL_EXTENSIONS[j] + URL_TYPE_EXTENSIONS[k];
+                        if (!(getHTML(foundURL) == ""))
+                            break;
+                    }
+                }
+            }
 
             return foundURL;
         }
