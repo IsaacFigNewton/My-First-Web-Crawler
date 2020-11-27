@@ -19,9 +19,11 @@ namespace First_Webcrawler
         //-80 just for testing porpoises
         public static int NUMBER_OF_ENTRIES = 91-80;
         public static int READING_COLUMN = 1;
+        public static String CONTACT_URL_WRITING_COLUMN = "G";
+        public static String MAIN_URL_WRITING_COLUMN = "H";
         public static String EMAIL_WRITING_COLUMN = "F";
         public static String PHONE_WRITING_COLUMN = "D";
-        public static String OTHER_WRITING_COLUMN = "G";
+        public static String OTHER_WRITING_COLUMN = "I";
 
         public static int URLIndex = 1;
         public static string [] URLs = new String [NUMBER_OF_ENTRIES];
@@ -32,7 +34,8 @@ namespace First_Webcrawler
         //2-dimensional array of contact info in String form
         //ex: int[,] array2D = new int[,] { {email1, phone1, other1}, {email2, phone2, other2}, {email3, phone3, other3}};
         public static String[,] contactInfo = new String[NUMBER_OF_ENTRIES, 3];
-        public static String PATH_OF_IO_DOC = "C:\\Users\\Owner\\Desktop\\List of Camera Clubs (Prepped for Web Crawler).xlsx";
+        public static String NAME_OF_IO_DOC = "List of Camera Clubs (Prepped for Web Crawler).xlsx";
+        public static String PATH_OF_IO_DOC = "C:\\Users\\Owner\\Desktop\\" + NAME_OF_IO_DOC;
         public static String SHEET_NAME = "Midwest (ND,SD,NE,KS,OK,TX,MN,I";
 
         public static Boolean endOfBody = false; //
@@ -111,7 +114,7 @@ namespace First_Webcrawler
                 Console.WriteLine(i + "'{0}'", index_val);
             }
             Console.WriteLine("Finished getting site URLs");
-            Console.WriteLine("Focus on boundary cases instead of all URLs");
+            Console.WriteLine("Focus on getting/reading contact URLs");
 
         }
 
@@ -678,10 +681,10 @@ namespace First_Webcrawler
             return url;
         }
 
-            //                                                                               End of contact locating/gathering section, beginning of contact info writing section
-            //*************************************************************************************************************************************************************************
+        //                                                                               End of contact locating/gathering section, beginning of contact info writing section
+        //*************************************************************************************************************************************************************************
 
-            private void buttonWriteContacts_Click(object sender, EventArgs e)
+        private void buttonWriteContacts_Click(object sender, EventArgs e)
         {
             //read the URLs from the excel doc to an array of strings
             WorkBook workbook = WorkBook.Load(PATH_OF_IO_DOC);
@@ -689,13 +692,17 @@ namespace First_Webcrawler
 
             int rowCount = NUMBER_OF_ENTRIES;
             //start at row 2 to skip the first header
-            for (int i = 0; i < rowCount; i++)
+            for (int i = 2; i < rowCount; i++)
             {
                 //check to make sure correct values for correct column are written
                 Console.WriteLine(i);
 
                 //set value by cell address
                 //set value by row and column indexing
+                worksheet[MAIN_URL_WRITING_COLUMN + i].Value = URLs[i];
+                Console.WriteLine(URLs[i]);
+                worksheet[CONTACT_URL_WRITING_COLUMN + i].Value = contactURLs[i];
+                Console.WriteLine(contactURLs[i]);
                 worksheet[EMAIL_WRITING_COLUMN + i].Value = contactInfo[i, 0];
                 Console.WriteLine(contactInfo[i, 0]);
                 worksheet[PHONE_WRITING_COLUMN + i].Value = contactInfo[i, 1];
@@ -705,6 +712,9 @@ namespace First_Webcrawler
 
                 Console.WriteLine("");
             }
+
+            //save the altered workbook
+            workbook.Save();
             Console.WriteLine("Finished writing contact information to workbook.");
         }
 

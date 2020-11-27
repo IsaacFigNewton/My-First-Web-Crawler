@@ -21,6 +21,8 @@ namespace First_Webcrawler
         {
             this.pageControl = new System.Windows.Forms.TabControl();
             this.page1 = new System.Windows.Forms.TabPage();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.buttonWriteContacts = new System.Windows.Forms.Button();
             this.checkBoxOther = new System.Windows.Forms.CheckBox();
             this.checkBoxPhone = new System.Windows.Forms.CheckBox();
@@ -31,8 +33,6 @@ namespace First_Webcrawler
             this.labelInfoToGather = new System.Windows.Forms.Label();
             this.title1 = new System.Windows.Forms.Label();
             this.page2 = new System.Windows.Forms.TabPage();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.pageControl.SuspendLayout();
             this.page1.SuspendLayout();
             this.SuspendLayout();
@@ -68,6 +68,26 @@ namespace First_Webcrawler
             this.page1.Text = "page1";
             this.page1.UseVisualStyleBackColor = true;
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.Location = new System.Drawing.Point(414, 436);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(446, 20);
+            this.label2.TabIndex = 10;
+            this.label2.Text = "(Careful when testing as it can/will break the testing workbook)";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(470, 406);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(390, 20);
+            this.label1.TabIndex = 9;
+            this.label1.Text = "DO NOT PRESS UNTIL DONE WITH OTHER PARTS";
+            // 
             // buttonWriteContacts
             // 
             this.buttonWriteContacts.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -77,7 +97,6 @@ namespace First_Webcrawler
             this.buttonWriteContacts.TabIndex = 8;
             this.buttonWriteContacts.Text = "Write Contact Information to Excel Sheet";
             this.buttonWriteContacts.UseVisualStyleBackColor = true;
-            this.buttonWriteContacts.Visible = false;
             // 
             // checkBoxOther
             // 
@@ -177,26 +196,6 @@ namespace First_Webcrawler
             this.page2.TabIndex = 1;
             this.page2.Text = "page2";
             this.page2.UseVisualStyleBackColor = true;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(470, 406);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(390, 20);
-            this.label1.TabIndex = 9;
-            this.label1.Text = "DO NOT PRESS UNTIL DONE WITH OTHER PARTS";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(581, 436);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(279, 20);
-            this.label2.TabIndex = 10;
-            this.label2.Text = "(I turned visibility off for the time being)";
             // 
             // GUI
             // 
