@@ -111,9 +111,7 @@ namespace First_Webcrawler
                 Console.WriteLine(i + "'{0}'", index_val);
             }
             Console.WriteLine("Finished getting site URLs");
-            Console.WriteLine("Edit contact page search section to just try all combos of URL_EXTENSIONS and URL_TYPE_EXTENSIONS appended to original URL for contact page");
-            Console.WriteLine("Also, focus on boundary cases instead of all URLs");
-            Console.WriteLine("Also, go to sites linked by sinwp to look for contact page");
+            Console.WriteLine("Focus on boundary cases instead of all URLs");
 
         }
 
@@ -298,13 +296,16 @@ namespace First_Webcrawler
                                 endIndex = startIndex + k + 1;
 
                                 foundURL = html.Substring(startIndex, endIndex - startIndex);
-                                
-                                //Look for 
-                                //Add google searching functiionality
+
+                                URLs[URLIndex] = foundURL;
+
+                                //if there is no url given, then google the club
+                                //if (foundURL != "")
+                                //    tryGoogling();
 
                                 //debugging
-                                Console.WriteLine("Found desired page phrase in HTML at character #" + i);
-                                Console.WriteLine("Desired URL = " + foundURL);
+                                Console.WriteLine("Found desired page phrase in sinwp page HTML at character #" + i);
+                                Console.WriteLine("Main page URL = " + foundURL);
                                 //if (i - CONTACT_SEGMENT_SIZE >= 0)
                                 //    Console.WriteLine(html.Substring(i - CONTACT_SEGMENT_SIZE, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
                                 //else
@@ -489,8 +490,9 @@ namespace First_Webcrawler
                         //if that fails, try brute-forcing the contact page url
                         contactURLs[URLIndex] = tryBruteForce(url);
 
-                        //if that fails, try googling the club based on the url stored in the respective URLs[] index
-                        contactURLs[URLIndex] = tryGoogling();
+                        //disabled for first round of testing
+                        ////if that fails, try googling the club based on the url stored in the respective URLs[] index
+                        //contactURLs[URLIndex] = tryGoogling();
 
                     //getting the contacts from the url or giving up
                     if (!(contactURLs[URLIndex] == "" || contactURLs[URLIndex].Length == 0))
