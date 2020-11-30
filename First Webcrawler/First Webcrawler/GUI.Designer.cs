@@ -17,7 +17,7 @@ namespace First_Webcrawler
     {
         //class variables
         //-80 just for testing porpoises
-        public static int NUMBER_OF_ENTRIES = 1010;
+        public static int NUMBER_OF_ENTRIES = 10;
         public static int READING_COLUMN = 1;
         public static String CONTACT_URL_WRITING_COLUMN = "G";
         public static String MAIN_URL_WRITING_COLUMN = "I";
@@ -124,11 +124,11 @@ namespace First_Webcrawler
 
         private void buttonLocateContacts_Click(object sender, EventArgs e)
         {
-            while (URLIndex < URLs.Length)
+            while (URLIndex < NUMBER_OF_ENTRIES)
             {
                 try
                 {
-                    while (URLIndex < URLs.Length)
+                    while (URLIndex < NUMBER_OF_ENTRIES)
                     {
                         string url = URLs[URLIndex];
                         string html = getHTML(url);
@@ -241,6 +241,7 @@ namespace First_Webcrawler
                             if (html.Substring(i, searchKeywords[j].Length).StartsWith(searchKeywords[j]))
                             {
                                 //find the URL then set foundURL to it
+                                //look through nearby html for contacts page URL then set foundURL to that string
                                 foundURL = getContactURLFromHTMLSegment(html.Substring(i-100, 200));
 
                                 //debugging
@@ -249,8 +250,9 @@ namespace First_Webcrawler
                                     Console.WriteLine(html.Substring(i - CONTACT_SEGMENT_SIZE, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
                                 else
                                     Console.WriteLine(html.Substring(0, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
+                                
 
-                                //look through nearby html for contacts page URL then set foundURL to that string
+                                Console.WriteLine("Contacts page URL = '" + foundURL + "'");
 
                             }
                             //move on to the next HTML once it's finished reading through this HTML
@@ -303,6 +305,8 @@ namespace First_Webcrawler
 
                                 URLs[URLIndex] = foundURL;
 
+                                foundURL = getURLFromHTML(-1, getHTML(foundURL), MAIN_PAGE_SEARCH_KEYWORDS);
+
                                 //if there is no url given, then google the club
                                 //if (foundURL != "")
                                 //    tryGoogling();
@@ -314,6 +318,8 @@ namespace First_Webcrawler
                                 //    Console.WriteLine(html.Substring(i - CONTACT_SEGMENT_SIZE, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
                                 //else
                                 //    Console.WriteLine(html.Substring(0, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
+
+                                
 
                             }
                             //move on to the next HTML once it's finished reading through this HTML
@@ -359,7 +365,7 @@ namespace First_Webcrawler
             try {
                 URLIndex = 0;
 
-                while (URLIndex < URLs.Length)
+                while (URLIndex < NUMBER_OF_ENTRIES)
                 {
                     string url = contactURLs[URLIndex];
 
@@ -560,13 +566,13 @@ namespace First_Webcrawler
             {
                 if (segment.Substring(i, 5) == "href=")
                 {
-                    startIndex = i + 6 + 1;
+                    startIndex = i + 6;
 
                     int k = 0;
                     while (k < segment.Length)
                     {
                         //break at the closing " in the html, signifying the end of the URL
-                        if (segment[startIndex + k + 1] == '"')
+                        if (segment[startIndex + k - 1] == '"')
                             break;
                         k++;
                     }
