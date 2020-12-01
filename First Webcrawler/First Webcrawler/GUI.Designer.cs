@@ -172,6 +172,8 @@ namespace First_Webcrawler
 
                     Console.WriteLine("");
                     Console.WriteLine("Finished getting sites' HTML/main page URLs");
+                    Console.WriteLine("There's something going wrong when accessing main and contacts pages' urls");
+                    Console.WriteLine("Try limiting the HTML segment analyzed for the contacts page link to the first <a> tag before the keyphrase");
                     Console.WriteLine("");
                 }
                 //catch the null argument exception and let user try again, starting at the next URL
@@ -231,8 +233,9 @@ namespace First_Webcrawler
                     Console.WriteLine(html.Substring(0, 15 + 20));
 
                     int i = 0;
+                    bool foundContact = false;
                     //read through html until it reaches the end of the body
-                    while (!endOfBody)
+                    while (!endOfBody && !foundContact)
                     {
                         //read through all of the search keywords
                         for (int j = 0; j < searchKeywords.Length; j++)
@@ -242,7 +245,7 @@ namespace First_Webcrawler
                             {
                                 //find the URL then set foundURL to it
                                 //look through nearby html for contacts page URL then set foundURL to that string
-                                foundURL = getContactURLFromHTMLSegment(html.Substring(i-100, 200));
+                                foundURL = getContactURLFromHTMLSegment(html.Substring(i-200, 400));
 
                                 //debugging
                                 Console.WriteLine("Found desired page phrase in HTML at character #" + i);
@@ -254,6 +257,8 @@ namespace First_Webcrawler
 
                                 Console.WriteLine("Contacts page URL = '" + foundURL + "'");
 
+                                foundContact = true;
+                                break;
                             }
                             //move on to the next HTML once it's finished reading through this HTML
                             if (html.Substring(i, 7).StartsWith("</body>"))
@@ -277,11 +282,12 @@ namespace First_Webcrawler
                     //print first few chars of HTML as indication of proper functioning
                     Console.WriteLine(html.Substring(0, 15 + 20));
 
+                    bool foundContact = false;
                     int startIndex = 0;
                     int endIndex = 0;
                     int i = 0;
                     //read through html until it finds the right keyword
-                    while (!endOfBody)
+                    while (!endOfBody && !foundContact)
                     {
                         //read through all of MAIN_PAGE_SEARCH_KEYWORDS
                         for (int j = 0; j < searchKeywords.Length; j++)
@@ -303,7 +309,9 @@ namespace First_Webcrawler
 
                                 foundURL = html.Substring(startIndex, endIndex - startIndex);
 
-                                URLs[URLIndex] = foundURL;
+                                //check to make sure the url linked by sinwp is valid, and if it is then set the main url to the respective main page url
+                                if (foundURL.Substring(0, 4) == "http")
+                                    URLs[URLIndex] = foundURL;
 
                                 foundURL = getURLFromHTML(-1, getHTML(foundURL), MAIN_PAGE_SEARCH_KEYWORDS);
 
@@ -319,8 +327,8 @@ namespace First_Webcrawler
                                 //else
                                 //    Console.WriteLine(html.Substring(0, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
 
-                                
-
+                                foundContact = true;
+                                break;
                             }
                             //move on to the next HTML once it's finished reading through this HTML
                             if (html.Substring(i, 7).StartsWith("</body>"))
@@ -571,14 +579,14 @@ namespace First_Webcrawler
                     int k = 0;
                     while (k < segment.Length)
                     {
-                        //break at the closing " in the html, signifying the end of the URL
-                        if (segment[startIndex + k - 1] == '"')
+                        //break at the closing " in the html, signifying the end of the HTML
+                        if (segment[startIndex + k + 1] == '"')
                             break;
                         k++;
                     }
                     endIndex = startIndex + k + 1;
 
-                    contact = segment.Substring(startIndex, endIndex);
+                    contact = segment.Substring(startIndex, endIndex - startIndex);
                     break;
                 }
                 else if (segment.Substring(i, 4) == "src=")
@@ -599,6 +607,11 @@ namespace First_Webcrawler
                     break;
                 }
             }
+
+            ////check to make sure the url about to be returned is valid, and if it isn't make the returned url reflect that
+            //if (contact.Substring(0, 4) != "http")
+            //    contact = "The contacts page url that I was going to return was not valid";
+
             return contact;
         }
 
