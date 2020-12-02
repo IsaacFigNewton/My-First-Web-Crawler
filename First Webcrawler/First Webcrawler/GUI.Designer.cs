@@ -18,7 +18,7 @@ namespace First_Webcrawler
         //class variables
         //-80 just for testing porpoises
         public static int NUMBER_OF_ENTRIES = 10;
-        public static int READING_COLUMN = 8;
+        public static int READING_COLUMN = 7;
         public static String CONTACT_URL_WRITING_COLUMN = "G";
         public static String MAIN_URL_WRITING_COLUMN = "H";
         public static String EMAIL_WRITING_COLUMN = "E";
@@ -37,8 +37,8 @@ namespace First_Webcrawler
         //2-dimensional array of contact info in String form
         //ex: int[,] array2D = new int[,] { {email1, phone1, other1}, {email2, phone2, other2}, {email3, phone3, other3}};
         public static String[,] contactInfo = new String[NUMBER_OF_ENTRIES, 3];
-        public static String NAME_OF_IO_DOC = "Mid Atlantic - South - East Adds (Prepped for Webcrawler).xlsx";
-        public static String SHEET_NAME = "MidAtlantic - South - East Adds";
+        public static String NAME_OF_IO_DOC = "placeholder camera club adds.xlsx";
+        public static String SHEET_NAME = "Sheet1";
         public static String PATH_OF_IO_DOC = "C:\\Users\\Owner\\Desktop\\" + NAME_OF_IO_DOC;
 
         public static Boolean endOfBody = false; //
@@ -118,6 +118,7 @@ namespace First_Webcrawler
             }
             Console.WriteLine("Finished getting site URLs");
             Console.WriteLine("Focus on getting/reading contact URLs");
+            Console.WriteLine("");
 
         }
 
@@ -174,7 +175,6 @@ namespace First_Webcrawler
 
                     Console.WriteLine("");
                     Console.WriteLine("Finished getting sites' HTML/main page URLs");
-                    Console.WriteLine("There's something going wrong when accessing main and contacts pages' urls");
                     Console.WriteLine("Try limiting the HTML segment analyzed for the contacts page link to the first <a> tag before the keyphrase");
                     Console.WriteLine("");
                 }
