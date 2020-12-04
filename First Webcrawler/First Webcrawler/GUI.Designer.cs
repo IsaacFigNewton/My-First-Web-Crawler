@@ -32,7 +32,7 @@ namespace First_Webcrawler
         //public static string[] URLs = UKURLs;
         public static string[] contactURLs = new String[NUMBER_OF_ENTRIES];
         //when you inevitably increase the number of things in the array below, you'll have to make the one below it a 2D array and alter lines 137-145 to allow subsequent known URLs
-        public static string[] KNOWN_CONTACT_URLS = { "https://sinwp.com/camera_clubs/", "http://www.n4c.us/" };
+        public static string[] KNOWN_CONTACT_URLS = { "https://sinwp.com/camera_clubs/", "http://www.n4c.us/", "https://www.caccaphoto.org/", "https://cameracouncil.org/member-clubs/", "https://www.facebook.com/" };
         public static string[] KNOWN_CONTACT_URLS_LOCATOR_KEYWORDS = {"web address:- <a href="};
         //2-dimensional array of contact info in String form
         //ex: int[,] array2D = new int[,] { {email1, phone1, other1}, {email2, phone2, other2}, {email3, phone3, other3}};
@@ -54,11 +54,12 @@ namespace First_Webcrawler
         //in case the scraper can't get the contact page for whatever reason, use the below information to brute force the contact URL
         public static String[] URL_PRE_EXTENSIONS = {"", "about/", "Club/", "info/", "page/" };
         public static String[] URL_EXTENSIONS = {"contact", "contact-us", "contact_us",  "Contact", "about-us", "about", "contact_us", "contact-form", "join-us", "contactus", "About-Us"};
+        public static String[] URL_EXTENSION_EXTENSIONS = { "", "2", "-2" };
         public static String[] URL_TYPE_EXTENSIONS = {"", ".html", ".htm", ".aspx", ".php", ".shtml", ".asp"};
         //if unable to find contact page this way, look for facebook link, go there, and then append "about"
 
         //Contact phrase html segment
-        public static int CONTACT_SEGMENT_SIZE = 200;
+        public static int CONTACT_SEGMENT_SIZE = 400;
 
         /// <summary>
         /// Required designer variable.
@@ -139,7 +140,7 @@ namespace First_Webcrawler
                         //make sure the url is valid
                         if (!(url == null || url == ""))
                         {
-                            //if the url does not start with the url for the contacts page of a club or is too short to read (but not empty) then read the HTML
+                            //if the url does not start with the url for a known club coalition site or is too short to read (but not empty) then read the HTML
                             if (((url.Length > 0) && (url.Length < KNOWN_CONTACT_URLS[0].Length)) || !((url.Substring(0, KNOWN_CONTACT_URLS[0].Length) == KNOWN_CONTACT_URLS[0]) /* || (url.Substring(0, knownContactURLs[1].Length) == knownContactURLs[1])*/))
                             {
                                 contactURLs[URLIndex] = getURLFromHTML(-1, html, MAIN_PAGE_SEARCH_KEYWORDS);
@@ -168,6 +169,11 @@ namespace First_Webcrawler
                                 Console.WriteLine("");
 
                             }
+                        }
+                        else if (url == "")
+                        {
+                            //i think I'm doing this bit right
+                            tryGoogling();
                         }
                         //increment the starting URLindex after an exception is seen so that it is incremented properly in the exception handlers
                         URLIndex++;
@@ -208,7 +214,9 @@ namespace First_Webcrawler
                 using (Stream stream = response.GetResponseStream())
                 using (StreamReader reader = new StreamReader(stream))
                 {
-                    return reader.ReadToEnd();
+                    return reader.ReadToEnd();  // can't do .ToLower(); because it ruins the urls, I've tested it
+                    //maybe return 2 strings one of the standard and one of the .ToLower-ed html, so you can search the .ToLower-ed HTML and then go to that character in the unaltered html for the url
+                    //that's just for later on, when efficiency and not debugging is my main focus
                 }
             }
             catch (UriFormatException ex)
@@ -220,7 +228,7 @@ namespace First_Webcrawler
             }
         }
 
-        private static string getURLFromHTML (int knownURLIndex, string html, String [] searchKeywords)
+        private static string getURLFromHTML(int knownURLIndex, string html, String[] searchKeywords)
         {
             string foundURL = "";
             try
@@ -366,7 +374,7 @@ namespace First_Webcrawler
                 Console.WriteLine("Looked for keyphrases outside of html for some reason.");
                 Console.WriteLine(ex);
                 Console.WriteLine("");
-                
+
                 //return the url
                 return foundURL;
             }
@@ -379,7 +387,8 @@ namespace First_Webcrawler
         {
             //read the information on the new site URL
             //basically the same as buttonLocateContacts_Click(), but it stores the contact data collected
-            try {
+            try
+            {
                 URLIndex = 0;
 
                 while (URLIndex < NUMBER_OF_ENTRIES)
@@ -418,7 +427,7 @@ namespace First_Webcrawler
 
         private static void getContactsFromURL(string url)
         {
-            
+
             try
             {
                 //make sure the url is not empty
@@ -511,15 +520,15 @@ namespace First_Webcrawler
                 else if (url != "Sorry, I couldn't find a contacts page.")
                 {
                     //getting the url:
-                        //check for a facebook link
-                        contactURLs[URLIndex] = checkForFacebookLink(url);
+                    //check for a facebook link
+                    contactURLs[URLIndex] = checkForFacebookLink(url);
 
-                        //if that fails, try brute-forcing the contact page url
-                        contactURLs[URLIndex] = tryBruteForce(url);
+                    //if that fails, try brute-forcing the contact page url
+                    contactURLs[URLIndex] = tryBruteForce(url);
 
-                        //disabled for first round of testing
-                        ////if that fails, try googling the club based on the url stored in the respective URLs[] index
-                        //contactURLs[URLIndex] = tryGoogling();
+                    //disabled for first round of testing
+                    ////if that fails, try googling the club based on the url stored in the respective URLs[] index
+                    //contactURLs[URLIndex] = tryGoogling();
 
                     //getting the contacts from the url or giving up
                     if (!(contactURLs[URLIndex] == "" || contactURLs[URLIndex].Length == 0))
@@ -573,7 +582,7 @@ namespace First_Webcrawler
             }
         }
 
-        private static String getContactURLFromHTMLSegment (String segment)
+        private static String getContactURLFromHTMLSegment(String segment)
         {
             String contact = "";
             int startIndex = 0;
@@ -601,7 +610,7 @@ namespace First_Webcrawler
                 else if (segment.Substring(i, 4) == "src=")
                 {
                     startIndex = i + 5 + 1;
-                    
+
                     int k = 0;
                     while (k < segment.Length)
                     {
@@ -624,7 +633,7 @@ namespace First_Webcrawler
             return contact;
         }
 
-        private static String checkForFacebookLink (String url)
+        private static String checkForFacebookLink(String url)
         {
             String[] searchKeywords = { "https://www.facebook.com/" };
             string html = getHTML(url);
@@ -633,7 +642,7 @@ namespace First_Webcrawler
             return foundURL;
         }
 
-        private static String tryBruteForce (String url)
+        private static String tryBruteForce(String url)
         {
             //find contacts page url given the main page url
             string baseURL = url;
@@ -643,7 +652,8 @@ namespace First_Webcrawler
             for (int i = 0; i < URL_REMOVE_EXTENSIONS.Length; i++)
             {
                 //if the last bit of the home page URL is a known removable phrase
-                if (baseURL.Substring(baseURL.Length - URL_REMOVE_EXTENSIONS[i].Length) == URL_REMOVE_EXTENSIONS[i]) {
+                if (baseURL.Substring(baseURL.Length - URL_REMOVE_EXTENSIONS[i].Length) == URL_REMOVE_EXTENSIONS[i])
+                {
                     //for each removable extension, reset the baseURL and set the foundURL to the baseURL before the removable phrase
                     baseURL = baseURL.Substring(0, baseURL.Length - URL_REMOVE_EXTENSIONS[i].Length);
                     foundURL = baseURL.Substring(0, baseURL.Length - URL_REMOVE_EXTENSIONS[i].Length);
@@ -657,11 +667,14 @@ namespace First_Webcrawler
             {
                 for (int j = 0; j < URL_EXTENSIONS.Length; j++)
                 {
-                    for (int k = 0; k < URL_TYPE_EXTENSIONS.Length; k++)
+                    for (int k = 0; k < URL_EXTENSION_EXTENSIONS.Length; k++)
                     {
-                        foundURL = baseURL + URL_PRE_EXTENSIONS[i] + URL_EXTENSIONS[j] + URL_TYPE_EXTENSIONS[k];
-                        if (!(getHTML(foundURL) == ""))
-                            break;
+                        for (int l = 0; l < URL_TYPE_EXTENSIONS.Length; l++)
+                        {
+                            foundURL = baseURL + URL_PRE_EXTENSIONS[i] + URL_EXTENSIONS[j] + URL_EXTENSION_EXTENSIONS[k] + URL_TYPE_EXTENSIONS[l];
+                            if (!(getHTML(foundURL) == ""))
+                                break;
+                        }
                     }
                 }
             }
@@ -669,13 +682,13 @@ namespace First_Webcrawler
             return foundURL;
         }
 
-        private static String tryGoogling ()
+        private static String tryGoogling()
         {
             //get club text
             WorkBook workbook = WorkBook.Load(PATH_OF_IO_DOC);
             WorkSheet worksheet = workbook.GetWorkSheet(SHEET_NAME);
-            //get value by row and column indexing
-            string clubGooglePhrase = worksheet.Rows[URLIndex].Columns[READING_COLUMN-1].ToString();
+            //get seach words by looking at the name of the club and what state it's located in
+            string clubGooglePhrase = worksheet.Rows[URLIndex].Columns[READING_COLUMN - 1].ToString() + " " + worksheet.Rows[URLIndex].Columns[READING_COLUMN + 1].ToString();
             //check to make sure correct value is collected
             Console.WriteLine(URLIndex + "'{0}'", clubGooglePhrase);
 
@@ -693,7 +706,7 @@ namespace First_Webcrawler
 
         private static String assembleGoogleURL(String clubPhrase)
         {
-            String[] clubPhraseWords = {};
+            String[] clubPhraseWords = { };
             for (int i = 0; i < clubPhraseWords.Length; i++)
             {
                 //parse each clubPhraseWords entry by the ' ' (space) character
