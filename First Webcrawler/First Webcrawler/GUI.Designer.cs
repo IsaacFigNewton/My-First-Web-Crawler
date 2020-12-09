@@ -32,7 +32,7 @@ namespace First_Webcrawler
         //public static string[] URLs = UKURLs;
         public static string[] contactURLs = new String[NUMBER_OF_ENTRIES];
         //when you inevitably increase the number of things in the array below, you'll have to make the one below it a 2D array and alter lines 137-145 to allow subsequent known URLs
-        public static string[] KNOWN_CONTACT_URLS = { "https://sinwp.com/camera_clubs/", "http://www.n4c.us/", "https://www.caccaphoto.org/", "https://cameracouncil.org/member-clubs/", "https://www.facebook.com/" };
+        public static string[] KNOWN_CONTACT_URLS = { "https://sinwp.com/camera_clubs/", "http://www.n4c.us/", "https://www.caccaphoto.org/", "https://cameracouncil.org/member-clubs/", "https://www.facebook.com/", "http://www.cnpa.org/regions/", "https://swppusa.com/camera_clubs/" };
         public static string[] KNOWN_CONTACT_URLS_LOCATOR_KEYWORDS = {"web address:- <a href="};
         //2-dimensional array of contact info in String form
         //ex: int[,] array2D = new int[,] { {email1, phone1, other1}, {email2, phone2, other2}, {email3, phone3, other3}};
@@ -43,7 +43,7 @@ namespace First_Webcrawler
 
         public static Boolean endOfBody = false;
         public static int linkCounter = 0;
-        public static String[] links = new string [100];
+        public static String[] links = new string [200];
         public static String[] MAIN_PAGE_SEARCH_TAGS_START = { "<a", "<button" };
         public static String[] MAIN_PAGE_SEARCH_TAGS_END = { "</a", "</button" };
         //all lowercase to expedite searches
@@ -326,7 +326,7 @@ namespace First_Webcrawler
                         //read through all of the search keywords
                         for (int j = 0; j < searchKeywords.Length; j++)
                         {
-                                    //EDIT THE FOLLOWING CODE IF NEED BE SO AS TO MAKE A LIST OF LINKS (<a> and <button> blocks) to go through and store them in the links array
+                                            //EDIT THE FOLLOWING CODE IF NEED BE SO AS TO MAKE A LIST OF LINKS (<a> and <button> blocks) to go through and store them in the links array
                             //if the site's HTML includes the keywords somewhere, look nearby it for the URL of the contacts page
                             if (html.Substring(i, searchKeywords[j].Length).StartsWith(searchKeywords[j]))
                             {
@@ -724,7 +724,6 @@ namespace First_Webcrawler
 
         private static String getContactURLFromHTMLSegments()
         {
-                                                                                        //REWRITE TO LOOP THROUGH THE links ARRAY AND SEARCH WITH searchWords
             String contact = "";
             int startIndex = 0;
             int endIndex = 0;
@@ -856,6 +855,9 @@ namespace First_Webcrawler
             //get seach words by looking at the name of the club and what state it's located in
                                                                                                                                 //PROBLEM HERE
             string clubGooglePhrase = worksheet.Rows[URLIndex].Columns[READING_COLUMN - 1].ToString() + " " + worksheet.Rows[URLIndex].Columns[READING_COLUMN + 1].ToString();
+            //add if statement to change any " CC" string to " Camera Club"
+            //if the word club isn't already included, append it
+            
             //check to make sure correct value is collected
             Console.WriteLine(URLIndex + "'{0}'", clubGooglePhrase);
 
