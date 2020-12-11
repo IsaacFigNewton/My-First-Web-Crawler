@@ -32,7 +32,7 @@ namespace First_Webcrawler
         //public static string[] URLs = UKURLs;
         public static string[] contactURLs = new String[NUMBER_OF_ENTRIES];
         //when you inevitably increase the number of things in the array below, you'll have to make the one below it a 2D array and alter lines 137-145 to allow subsequent known URLs
-        public static string[] KNOWN_CONTACT_URLS = { "https://sinwp.com/camera_clubs/", "http://www.n4c.us/", "https://www.caccaphoto.org/", "https://cameracouncil.org/member-clubs/", "https://www.facebook.com/", "http://www.cnpa.org/regions/", "https://swppusa.com/camera_clubs/" };
+        public static string[] KNOWN_CONTACT_URLS = { "https://sinwp.com/camera_clubs/", "http://www.n4c.us/", "https://www.caccaphoto.org/", "https://cameracouncil.org/member-clubs/", "https://www.facebook.com/", "http://www.cnpa.org/regions/", "https://swppusa.com/camera_clubs/", "http://www.wicameraclubs.org/" };
         public static string[] KNOWN_CONTACT_URLS_LOCATOR_KEYWORDS = {"web address:- <a href="};
         //2-dimensional array of contact info in String form
         //ex: int[,] array2D = new int[,] { {email1, phone1, other1}, {email2, phone2, other2}, {email3, phone3, other3}};
@@ -43,11 +43,12 @@ namespace First_Webcrawler
 
         public static Boolean endOfBody = false;
         public static int linkCounter = 0;
-        public static String[] links = new string [200];
+        public static String[] links = new string [1000];
         public static String[] MAIN_PAGE_SEARCH_TAGS_START = { "<a", "<button" };
         public static String[] MAIN_PAGE_SEARCH_TAGS_END = { "</a", "</button" };
         //all lowercase to expedite searches
-        public static String[] LINK_SEARCH_KEYWORDS = {"contact", "about", "meetings", "board", "coordinators"};
+        public static String[] LINK_SEARCH_KEYWORDS = { "contact", "about", "meet", "board", "coordinators" };
+        public static String[] STATE_INITIALS = { "AL", "", ""};
         public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = { {"president", "Email", "email", "mailto:", "{at}", "@" }, { "PHONE", "Phone", "phone", "tel:-", "-", "" }, { "Address", "address", "at", "address:", "Ave", "Rd" }, { "Location", "meet", "location", "Ave", "Rd", "Ln" } };
         //# of types of contact information in the array above
         public static int NUMBER_OF_CONTACT_TYPES = 3;
@@ -58,7 +59,7 @@ namespace First_Webcrawler
         public static String[] URL_REMOVE_EXTENSIONS = {"default", "index", "Default" };
         //in case the scraper can't get the contact page for whatever reason, use the below information to brute force the contact URL
         public static String[] URL_PRE_EXTENSIONS = {"", "about/", "Club/", "info/", "page/" };
-        public static String[] URL_EXTENSIONS = {"contact", "contact-us", "contact_us",  "Contact", "about-us", "about", "contact_us", "contact-form", "join-us", "contactus", "About-Us"};
+        public static String[] URL_EXTENSIONS = {"contact", "contact-us", "contact_us",  "Contact", "about-us", "about", "contact_us", "contact-form", "join-us", "contactus","ContactUs", "About-Us"};
         public static String[] URL_EXTENSION_EXTENSIONS = { "", "2", "-2" };
         public static String[] URL_TYPE_EXTENSIONS = {"", ".html", ".htm", ".aspx", ".php", ".shtml", ".asp"};
         //if unable to find contact page this way, look for facebook link, go there, and then append "about"
@@ -103,6 +104,10 @@ namespace First_Webcrawler
 
         private void buttonGetURLs_Click(object sender, EventArgs e)
         {
+            //initialize links list
+            for (int i = 0; i < links.Length; i++)
+                links[i] = "";
+
             //read the URLs from the excel doc to an array of strings
             WorkBook workbook = WorkBook.Load(PATH_OF_IO_DOC);
             WorkSheet worksheet = workbook.GetWorkSheet(SHEET_NAME);
@@ -244,13 +249,17 @@ namespace First_Webcrawler
                             //i think I'm doing this bit right
                             tryGoogling();
                         }
+                        else
+                        {
+                            tryGoogling();
+                        }
                         //increment the starting URLindex after an exception is seen so that it is incremented properly in the exception handlers
                         URLIndex++;
                     }
 
                     Console.WriteLine("");
                     Console.WriteLine("Finished getting sites' HTML/main page URLs");
-                    Console.WriteLine("Try limiting the HTML segment analyzed for the contacts page link to the first <a> tag before the keyphrase");
+                    Console.WriteLine("FIX LINES 343-362 SO THAT THEY READ THE LINK AFTER THE ' <a' STRING");
                     Console.WriteLine("");
                 }
                 //catch the null argument exception and let user try again, starting at the next URL
@@ -304,6 +313,7 @@ namespace First_Webcrawler
             String[] searchKeywords = keywords;
             string foundURL = "";
             string foundLink = "";
+            linkCounter = 0;
             try
             {
                 endOfBody = false;
@@ -327,6 +337,9 @@ namespace First_Webcrawler
                         for (int j = 0; j < searchKeywords.Length; j++)
                         {
                                             //EDIT THE FOLLOWING CODE IF NEED BE SO AS TO MAKE A LIST OF LINKS (<a> and <button> blocks) to go through and store them in the links array
+                            
+                                            //FIX SO THAT IT READS THE LINK AFTER THE "<a" STRING
+
                             //if the site's HTML includes the keywords somewhere, look nearby it for the URL of the contacts page
                             if (html.Substring(i, searchKeywords[j].Length).StartsWith(searchKeywords[j]))
                             {
@@ -849,28 +862,36 @@ namespace First_Webcrawler
 
         private static String tryGoogling()
         {
-            //get club text
-            WorkBook workbook = WorkBook.Load(PATH_OF_IO_DOC);
-            WorkSheet worksheet = workbook.GetWorkSheet(SHEET_NAME);
-            //get seach words by looking at the name of the club and what state it's located in
-                                                                                                                                //PROBLEM HERE
-            string clubGooglePhrase = worksheet.Rows[URLIndex].Columns[READING_COLUMN - 1].ToString() + " " + worksheet.Rows[URLIndex].Columns[READING_COLUMN + 1].ToString();
-            //add if statement to change any " CC" string to " Camera Club"
-            //if the word club isn't already included, append it
-            
-            //check to make sure correct value is collected
-            Console.WriteLine(URLIndex + "'{0}'", clubGooglePhrase);
+            if (URLIndex < NUMBER_OF_ENTRIES)
+            {
+                //get club text
+                WorkBook workbook = WorkBook.Load(PATH_OF_IO_DOC);
+                WorkSheet worksheet = workbook.GetWorkSheet(SHEET_NAME);
+                //get seach words by looking at the name of the club and what state it's located in
+                //PROBLEM HERE
+                //                                                                      -7 because you're reading from column A
+                string clubGooglePhrase = worksheet.Rows[URLIndex].Columns[READING_COLUMN - 7].ToString() + " " + worksheet.Rows[URLIndex].Columns[READING_COLUMN + 1].ToString();
+                //add if statement to change any " CC" string to " Camera Club"
+                //if the word club isn't already included, append it
 
-            //then assemble search URL
-            String url = assembleGoogleURL(clubGooglePhrase);
+                //check to make sure correct value is collected
+                Console.WriteLine(URLIndex + "'{0}'", clubGooglePhrase);
 
-            //then look for the first search result's URL
-            String[] searchKeywords = { };
-            string html = getHTML(url);
-            string foundURL = "";
-            getURLFromHTML(-1, html, searchKeywords);
+                //then assemble search URL
+                String url = assembleGoogleURL(clubGooglePhrase);
 
-            return foundURL;
+                //then look for the first search result's URL
+                String[] searchKeywords = { };
+                string html = getHTML(url);
+                string foundURL = "";
+                getURLFromHTML(-1, html, searchKeywords);
+
+                return foundURL;
+            }
+                else
+            {
+                return "The URLIndex value was out of bounds";
+            }
         }
 
         private static String assembleGoogleURL(String clubPhrase)
