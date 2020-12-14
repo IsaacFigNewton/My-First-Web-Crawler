@@ -46,9 +46,9 @@ namespace First_Webcrawler
         public static Boolean checkBoxOtherIsChecked = true;
         public static Boolean endOfBody = false;
         public static int linkCounter = 0;
-        public static String[] links = new string [1000];
-        public static String[] MAIN_PAGE_SEARCH_TAGS_START = { "<a", "<button" };
-        public static String[] MAIN_PAGE_SEARCH_TAGS_END = { "</a>", "</button>" };
+        public static String[] links = new string [100];
+        public static String[] MAIN_PAGE_SEARCH_TAGS_START = { "<a ", "<button " };
+        public static String[] MAIN_PAGE_SEARCH_TAGS_END = { ">" };
         //all lowercase to expedite searches
         public static String[] LINK_SEARCH_KEYWORDS = { "contact", "about", "meet", "board", "coordinators" };
         public static String[] STATE_INITIALS = { "AL", "", ""};
@@ -68,7 +68,8 @@ namespace First_Webcrawler
         //if unable to find contact page this way, look for facebook link, go there, and then append "about"
 
         //Contact phrase html segment
-        public static int CONTACT_SEGMENT_SIZE = 400;
+        public static int CONTACT_SEGMENT_SIZE = 100;
+        public static String impossibleSearchPhrase = "Hopefully this will never show up in a site's HTML";
 
         /// <summary>
         /// Required designer variable.
@@ -108,8 +109,9 @@ namespace First_Webcrawler
         private void buttonGetURLs_Click(object sender, EventArgs e)
         {
             //initialize links list
+            //this is not the cause of the null value exceptions
             for (int i = 0; i < links.Length; i++)
-                links[i] = "";
+                links[i] = "empty";
 
             //read the URLs from the excel doc to an array of strings
             WorkBook workbook = WorkBook.Load(PATH_OF_IO_DOC);
@@ -334,32 +336,31 @@ namespace First_Webcrawler
                     int i = 0;
                     bool foundContact = false;
                     //read through html until it reaches the end of the body or finds the contact
-                    while (!endOfBody && !foundContact)
+                    while (!endOfBody && !foundContact && linkCounter < links.Length)
                     {
                         //read through all of the search keywords
                         for (int j = 0; j < searchKeywords.Length; j++)
                         {
-                                            //EDIT THE FOLLOWING CODE IF NEED BE SO AS TO MAKE A LIST OF LINKS (<a> and <button> blocks) to go through and store them in the links array
-                            
-                                            //FIX SO THAT IT READS THE LINK AFTER THE "<a" STRING
-
+                            //makes a list (links array) of <a> blocks (<a> and <button> blocks) to go through and store them in the links array
                             //if the site's HTML includes the keywords somewhere, look nearby it for the URL of the contacts page
                             if (html.Substring(i, searchKeywords[j].Length) == (searchKeywords[j]))
                             {
                                 //find the <a> and <button> blocks
                                 //look through subsequent html for closing <a> tag, and when it's found, set k to it
                                 int k = i;
-                                while (html.Substring(k, MAIN_PAGE_SEARCH_TAGS_END[j].Length) == (MAIN_PAGE_SEARCH_TAGS_END[j]))
+                                while (html.Substring(k, MAIN_PAGE_SEARCH_TAGS_END[j].Length) != (MAIN_PAGE_SEARCH_TAGS_END[j]))
                                     k++;
 
                                 //add another link as an entry to the array of links to go through
-                                links[linkCounter] = html.Substring(i, k - i);
+                                //this is not the cause of null value exceptions either
+                                if (html.Substring(i, k - i) != null && html.Substring(i, k - i) != "")
+                                    links[linkCounter] = html.Substring(i, k - i);
                                 linkCounter++;
 
                                 //debugging
                                 Console.WriteLine("Found a link at character #" + i);
                                 if (i - CONTACT_SEGMENT_SIZE >= 0)
-                                    Console.WriteLine(html.Substring(i - CONTACT_SEGMENT_SIZE, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
+                                    Console.WriteLine(html.Substring(i - CONTACT_SEGMENT_SIZE, 2*CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
                                 else
                                     Console.WriteLine(html.Substring(0, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
                             }
@@ -396,7 +397,7 @@ namespace First_Webcrawler
                     int endIndex = 0;
                     int i = 0;
                     //read through html until it finds the right keyword
-                    while (!endOfBody && !foundContact)
+                    while (!endOfBody && !foundContact && linkCounter < links.Length)
                     {
                         //read through all of MAIN_PAGE_SEARCH_KEYWORDS
                         for (int j = 0; j < searchKeywords.Length; j++)
@@ -750,12 +751,27 @@ namespace First_Webcrawler
             //loop through all links accumulated
             for (int i = 0; i < links.Length; i++)
             {
-                //SOME VALUES OF links ARE NULL SOME OTHER PROBLEMS HERE TOO;
+                //links[i] should be a segment of HTML
                 link = links[i];
+                
+                //Console.WriteLine("all links");
+                //for (int q = 0; q < links.Length; q++)
+                //{
+                //    Console.WriteLine(links[q]);
+                //}-
+                //Console.WriteLine("");
+                //if (link == null)
+                //{
+                //    Console.WriteLine("link is null, not empty");
+                //    Console.WriteLine(link);
+                //}
+                //Console.WriteLine("");
 
+                //fuck null values of links, all my homies use empty strings
+                if (link == null)
+                    link = "";
+                
                 //loop through each link, checking if it has one of the search words
-                                                                    //ERROR HERE; VALUE OF link IS NULL
-                                                                    //DOING l LOOP MAY BE CAUSE OF PROBLEMS?
                 for (int l = 0; l < link.Length; l++)
                 {
                     for (int q = 0; q < LINK_SEARCH_KEYWORDS.Length; q++)
@@ -962,8 +978,6 @@ namespace First_Webcrawler
 
         private void resetContactsSearchKeywordsArray()
         {
-            String impossibleSearchPhrase = "Hopefully this will never show up in a site's HTML";
-
             //alter respective email search word entries
             if (checkBoxEmailIsChecked)
             {
