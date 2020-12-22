@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2041
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "First Webcrawler", "First Webcrawler\First Webcrawler.csproj", "{F5BCB94F-0D7C-42F9-96C2-03B0BA513FC0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Photography Club Contact Gatherer", "First Webcrawler\Photography Club Contact Gatherer.csproj", "{F5BCB94F-0D7C-42F9-96C2-03B0BA513FC0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
