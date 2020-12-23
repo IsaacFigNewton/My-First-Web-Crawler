@@ -278,11 +278,11 @@ namespace First_Webcrawler
                         {
                             contactURLs[URLIndex] = url;
 
-                            Console.WriteLine("Empty URL");
+                            Console.WriteLine("Empty source URL");
                             Console.WriteLine("");
 
                             //i think I'm doing this bit right
-                            tryGoogling();
+                            URLs[URLIndex] = assembleGoogleURL();
                         }
                         //increment the starting URLindex after an exception is seen so that it is incremented properly in the exception handlers
                         URLIndex++;
@@ -454,16 +454,6 @@ namespace First_Webcrawler
 
                                 foundURL = html.Substring(startIndex, endIndex - startIndex);
                                 
-                                ////if there is no url given, then google the club
-                                //if (foundURL == "")
-                                //    tryGoogling();
-
-                                ////debugging
-                                //if (i - CONTACT_SEGMENT_SIZE >= 0)
-                                //    Console.WriteLine(html.Substring(i - CONTACT_SEGMENT_SIZE, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
-                                //else
-                                //    Console.WriteLine(html.Substring(0, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
-
                                 foundContact = true;
                                 break;
                             }
@@ -720,7 +710,7 @@ namespace First_Webcrawler
                     //contactURLs[URLIndex] = tryBruteForce(url);
 
                     ////if that fails, try googling the club based on the url stored in the respective URLs[] index
-                    //contactURLs[URLIndex] = tryGoogling();
+                    //contactURLs[URLIndex] = assembleGoogleURL();
 
                     //getting the contacts from the url or giving up
                     if (!(contactURLs[URLIndex] == "" || contactURLs[URLIndex].Length == 0))
@@ -900,7 +890,7 @@ namespace First_Webcrawler
             return foundURL;
         }
 
-        private static String tryGoogling()
+        private static String checkLenseLab()
         {
             //check to make sure you're not going with the sinwp page for the club url
 
@@ -920,7 +910,43 @@ namespace First_Webcrawler
                 Console.WriteLine(URLIndex + "'{0}'", clubGooglePhrase);
 
                 //then assemble search URL
-                String url = assembleGoogleURL(clubGooglePhrase);
+                String url = "https://www.lenslab.co.uk/clublist.php";
+
+                //then look for the first search result's URL
+                String[] searchKeywords = { clubGooglePhrase };
+                string html = getHTML(url);
+                string foundURL = "";
+                getURLFromHTML(-1, html, searchKeywords);
+
+                return foundURL;
+            }
+            else
+            {
+                return "The URLIndex value was out of bounds";
+            }
+        }
+
+        private static String checkFacebook()
+        {
+            //check to make sure you're not going with the sinwp page for the club url
+
+            if (URLIndex < NUMBER_OF_ENTRIES)
+            {
+                //get club text
+                WorkBook workbook = WorkBook.Load(PATH_OF_IO_DOC);
+                WorkSheet worksheet = workbook.GetWorkSheet(SHEET_NAME);
+                //get seach words by looking at the name of the club and what state it's located in
+                //PROBLEM HERE
+                //                                                                      -7 because you're reading from column A
+                string clubGooglePhrase = worksheet.Rows[URLIndex].Columns[READING_COLUMN - 7].ToString() + " " + worksheet.Rows[URLIndex].Columns[READING_COLUMN + 1].ToString();
+                //add if statement to change any " CC" string to " Camera Club"
+                //if the word club isn't already included, append it
+
+                //check to make sure correct value is collected
+                Console.WriteLine(URLIndex + "'{0}'", clubGooglePhrase);
+
+                //then assemble search URL
+                String url = assembleFacebookURL();
 
                 //then look for the first search result's URL
                 String[] searchKeywords = { };
@@ -930,29 +956,72 @@ namespace First_Webcrawler
 
                 return foundURL;
             }
-                else
+            else
             {
                 return "The URLIndex value was out of bounds";
             }
         }
 
-        private static String assembleGoogleURL(String clubPhrase)
+        private static String assembleFacebookURL()
         {
-            String[] clubPhraseWords = { };
-            for (int i = 0; i < clubPhraseWords.Length; i++)
+            if (URLIndex < NUMBER_OF_ENTRIES)
             {
-                //parse each clubPhraseWords entry by the ' ' (space) character
-            }
+                //get club text
+                WorkBook workbook = WorkBook.Load(PATH_OF_IO_DOC);
+                WorkSheet worksheet = workbook.GetWorkSheet(SHEET_NAME);
+                //get seach words by looking at the name of the club and what state it's located in
+                //                                                                      -7 because you're reading from column A
+                string clubPhrase = worksheet.Rows[URLIndex].Columns[READING_COLUMN - 7].ToString() + " " + worksheet.Rows[URLIndex].Columns[READING_COLUMN + 1].ToString();
+                //add if statement to change any " CC" string to " Camera Club"
+                //if the word club isn't already included, append it
+                String[] clubPhraseWords = { "Camera Club" };
+                for (int i = 0; i < clubPhrase.Length; i++)
+                {
+                    //parse each clubPhraseWords entry by the ' ' (space) character
+                }
 
-            //assemble google query url
-            String url = "https://www.google.com/search?q=" + '"';
-            for (int i = 0; i < clubPhraseWords.Length; i++)
+                //assemble google query url
+                String url = "https://www.google.com/search?q=" + '"';
+                for (int i = 0; i < clubPhraseWords.Length; i++)
+                {
+                    url += clubPhraseWords[i] + "+";
+                }
+                url = url.Substring(0, url.Length - 1) + '"';
+
+                return url;
+            }
+            return "The URLIndex was larger than the number of entries being read";
+        }
+
+        private static String assembleGoogleURL()
+        {
+            if (URLIndex < NUMBER_OF_ENTRIES)
             {
-                url += clubPhraseWords[i] + "+";
-            }
-            url = url.Substring(0, url.Length - 1) + '"';
+                //get club text
+                WorkBook workbook = WorkBook.Load(PATH_OF_IO_DOC);
+                WorkSheet worksheet = workbook.GetWorkSheet(SHEET_NAME);
+                //get seach words by looking at the name of the club and what state it's located in
+                //                                                                      -7 because you're reading from column A
+                string clubPhrase = worksheet.Rows[URLIndex].Columns[READING_COLUMN - 7].ToString() + " " + worksheet.Rows[URLIndex].Columns[READING_COLUMN + 1].ToString();
+                //add if statement to change any " CC" string to " Camera Club"
+                //if the word club isn't already included, append it
+                String[] clubPhraseWords = {"Camera Club" };
+                for (int i = 0; i < clubPhrase.Length; i++)
+                {
+                    //parse each clubPhraseWords entry by the ' ' (space) character
+                }
 
-            return url;
+                //assemble google query url
+                String url = "https://www.google.com/search?q=" + '"';
+                for (int i = 0; i < clubPhraseWords.Length; i++)
+                {
+                    url += clubPhraseWords[i] + "+";
+                }
+                url = url.Substring(0, url.Length - 1) + '"';
+
+                return url;
+            }
+            return "The URLIndex was larger than the number of entries being read";
         }
 
         //                                                                               End of contact locating/gathering section, beginning of contact info writing section
