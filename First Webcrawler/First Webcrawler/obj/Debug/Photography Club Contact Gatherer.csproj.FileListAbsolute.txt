@@ -1,0 +1,18 @@
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\bin\Debug\First Webcrawler.exe.config
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\bin\Debug\First Webcrawler.exe
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\bin\Debug\First Webcrawler.pdb
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\bin\Debug\Flurl.dll
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\bin\Debug\IronXL.dll
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\bin\Debug\System.ValueTuple.dll
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\bin\Debug\Flurl.pdb
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\bin\Debug\Flurl.xml
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\bin\Debug\IronXL.xml
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\bin\Debug\System.ValueTuple.xml
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\obj\Debug\Photography Club Contact Gatherer.csprojAssemblyReference.cache
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\obj\Debug\First_Webcrawler.GUI.resources
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\obj\Debug\First_Webcrawler.Properties.Resources.resources
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\obj\Debug\Photography Club Contact Gatherer.csproj.GenerateResource.cache
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\obj\Debug\Photography Club Contact Gatherer.csproj.CoreCompileInputs.cache
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\obj\Debug\Photography Club Contact Gatherer.csproj.CopyComplete
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\obj\Debug\First Webcrawler.exe
+C:\Users\Owner\Documents\GitHub\Photography-Club-Contact-Gatherer\First Webcrawler\First Webcrawler\obj\Debug\First Webcrawler.pdb
