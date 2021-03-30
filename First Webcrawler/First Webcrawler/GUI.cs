@@ -33,6 +33,7 @@ namespace First_Webcrawler
             this.labelInfoToGather = new System.Windows.Forms.Label();
             this.title1 = new System.Windows.Forms.Label();
             this.page2 = new System.Windows.Forms.TabPage();
+            this.checkBoxAddress = new System.Windows.Forms.CheckBox();
             this.pageControl.SuspendLayout();
             this.page1.SuspendLayout();
             this.SuspendLayout();
@@ -49,6 +50,7 @@ namespace First_Webcrawler
             // 
             // page1
             // 
+            this.page1.Controls.Add(this.checkBoxAddress);
             this.page1.Controls.Add(this.label2);
             this.page1.Controls.Add(this.label1);
             this.page1.Controls.Add(this.buttonWriteContacts);
@@ -104,7 +106,7 @@ namespace First_Webcrawler
             this.checkBoxOther.Checked = true;
             this.checkBoxOther.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxOther.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.checkBoxOther.Location = new System.Drawing.Point(105, 231);
+            this.checkBoxOther.Location = new System.Drawing.Point(105, 266);
             this.checkBoxOther.Name = "checkBoxOther";
             this.checkBoxOther.Size = new System.Drawing.Size(84, 29);
             this.checkBoxOther.TabIndex = 7;
@@ -196,6 +198,19 @@ namespace First_Webcrawler
             this.page2.TabIndex = 1;
             this.page2.Text = "page2";
             this.page2.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxAddress
+            // 
+            this.checkBoxAddress.AutoSize = true;
+            this.checkBoxAddress.Checked = true;
+            this.checkBoxAddress.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxAddress.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxAddress.Location = new System.Drawing.Point(105, 231);
+            this.checkBoxAddress.Name = "checkBoxAddress";
+            this.checkBoxAddress.Size = new System.Drawing.Size(110, 29);
+            this.checkBoxAddress.TabIndex = 11;
+            this.checkBoxAddress.Text = "Address";
+            this.checkBoxAddress.UseVisualStyleBackColor = true;
             // 
             // GUI
             // 

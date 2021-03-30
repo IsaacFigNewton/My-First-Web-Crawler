@@ -17,12 +17,12 @@ namespace First_Webcrawler
     {
         //class variables
         //-80 just for testing porpoises
-        public static int NUMBER_OF_ENTRIES = 491;
+        public static int NUMBER_OF_ENTRIES = 321;
         public static int NAMES_COLUMN = 0;
         public static int READING_COLUMN = 1;
-        public static String MAIN_URL_WRITING_COLUMN = "G";
-        public static String CONTACT_URL_WRITING_COLUMN = "F";
-        public static String EMAIL_WRITING_COLUMN = "E";
+        public static String MAIN_URL_WRITING_COLUMN = "E";
+        public static String CONTACT_URL_WRITING_COLUMN = "D";
+        public static String EMAIL_WRITING_COLUMN = "C";
         public static String PHONE_WRITING_COLUMN = "H";
         public static String ADDRESS_WRITING_COLUMN = "I";
         public static String MEETING_LOCATION_WRITING_COLUMN = "J";
@@ -42,13 +42,14 @@ namespace First_Webcrawler
         //2-dimensional array of contact info in String form
         //ex: int[,] array2D = new int[,] { {email1, phone1, other1}, {email2, phone2, other2}, {email3, phone3, other3}};
         public static String[,] contactInfo = new String[NUMBER_OF_ENTRIES, 3];
-        public static String NAME_OF_IO_DOC = "Hyperlink to URL to Info.xlsx"; //"UK Camera Clubs 11-20-20 (Prepped for Web Crawler).xlsx";
+        public static String NAME_OF_IO_DOC = "Hyperlink to URL to Info 2.xlsx"; //"UK Camera Clubs 11-20-20 (Prepped for Web Crawler).xlsx";
         //Clubs from NCPF, EAF, KCPA, MCPF, SPF
         public static String SHEET_NAME = "Sheet1";
         public static String PATH_OF_IO_DOC = "C:\\Users\\Owner\\Desktop\\" + NAME_OF_IO_DOC;
 
         public static Boolean checkBoxEmailIsChecked = true;
         public static Boolean checkBoxPhoneIsChecked = true;
+        public static Boolean checkBoxAddressIsChecked = true;
         public static Boolean checkBoxOtherIsChecked = true;
         public static Boolean endOfBody = false;
         public static int linkCounter = 0;
@@ -237,7 +238,6 @@ namespace First_Webcrawler
 
                     Console.WriteLine("");
                     Console.WriteLine("Finished getting sites' HTML/main page URLs");
-                    Console.WriteLine("FIX LINES 842 and 856-861 SO THAT THE METHOD TURNS LOCAL HTML LINKS INTO URLS");
                     Console.WriteLine("");
                 }
                 ////catch the null argument exception and let user try again, starting at the next URL
@@ -271,8 +271,11 @@ namespace First_Webcrawler
                 using (StreamReader reader = new StreamReader(stream))
                 {
                     return reader.ReadToEnd();  // can't do .ToLower(); because it ruins the urls, I've tested it
-                    //maybe return 2 strings one of the standard and one of the .ToLower-ed html, so you can search the .ToLower-ed HTML and then go to that character in the unaltered html for the url
-                    //that's just for later on, when efficiency and not debugging is my main focus
+                    /*
+                        maybe return 2 strings one of the standard and one of the .ToLower-ed html, so you can search the .ToLower-ed HTML
+                        and then go to that character in the unaltered html for the url?
+                        that's just for later on, when efficiency and not debugging is my main focus
+                     */
                 }
             }
             catch (WebException ex)
@@ -750,6 +753,7 @@ namespace First_Webcrawler
                     //check all possible link extensions
                     for (int i = 0; i < URL_TYPE_EXTENSIONS.Length; i++)
                     {
+                        //if the contact ends with a URL_TYPE_EXTENSION from URL_TYPE_EXTENSIONS
                         if (contact.Substring(contact.Length - URL_TYPE_EXTENSIONS[i].Length, URL_TYPE_EXTENSIONS[i].Length) == URL_TYPE_EXTENSIONS[i]) {
                             tempContact = contact;
                             break;
@@ -758,9 +762,9 @@ namespace First_Webcrawler
                     }
                     //check if the contact url is a local link and convert it to a URL if it is
                     if (contact.Substring(0, 1) == "/")
-                        tempContact = "The contacts page url that I was going to return was not valid because it was a local link and not a url";
+                        tempContact = prepBaseURL(baseURL) + contact;
                     else if (contact.Substring(0, 2) == "./")
-                        tempContact = "The contacts page url that I was going to return was not valid because it was a local link and not a url";
+                        tempContact = prepBaseURL(baseURL) + contact.Substring(1);
                     else if (contact != "The contacts page url that I was going to return was not valid")
                         tempContact = baseURL + tempContact;
                 }
@@ -777,6 +781,16 @@ namespace First_Webcrawler
             {
                 return "link value at index was null on line 722";
             }
+        }
+
+        private static String prepBaseURL(String baseURL)
+        {
+            //if the baseURL doesn't have "/", or only has one at the end of "https://"
+            if (baseURL.LastIndexOf("/") == -1 || baseURL.Substring(0, baseURL.LastIndexOf("/")+1).Equals("https://"))
+                //return the original, unchanged baseURL
+                return baseURL;
+            //otherwise, return only the first part of the URL 
+            return baseURL.Substring(0, baseURL.LastIndexOf("/"));
         }
 
         private static String checkForFacebookLink(String url)
@@ -817,7 +831,7 @@ namespace First_Webcrawler
                     {
                         for (int l = 0; l < URL_TYPE_EXTENSIONS.Length; l++)
                         {
-                            foundURL = baseURL + URL_PRE_EXTENSIONS[i] + URL_EXTENSIONS[j] + URL_EXTENSION_EXTENSIONS[k] + URL_TYPE_EXTENSIONS[l];
+                            foundURL = prepBaseURL(baseURL) + URL_PRE_EXTENSIONS[i] + URL_EXTENSIONS[j] + URL_EXTENSION_EXTENSIONS[k] + URL_TYPE_EXTENSIONS[l];
                             if (!(getHTML(foundURL) == ""))
                                 break;
                         }
@@ -935,13 +949,14 @@ namespace First_Webcrawler
                 WorkSheet worksheet = workbook.GetWorkSheet(SHEET_NAME);
                 //get seach words by looking at the name of the club and what state it's located in
                 string clubPhrase = worksheet.Rows[URLIndex].Columns[NAMES_COLUMN].ToString() + " " + worksheet.Rows[URLIndex].Columns[READING_COLUMN + 1].ToString();
+                
+                String[] clubPhraseArray = clubPhrase.Split(' ');
+                String[] clubPhraseWords = new String [clubPhraseArray.Length+2];
                 //add if statement to change any " CC" string to " Camera Club"
-                //if the word club isn't already included, append it
-                String[] clubPhraseWords = {"Camera Club" };
-                for (int i = 0; i < clubPhrase.Length; i++)
-                {
-                    //parse each clubPhraseWords entry by the ' ' (space) character
-                }
+
+                //append the words "camera" and "club" just in case
+                clubPhraseWords[clubPhraseWords.Length - 2] = "Camera";
+                clubPhraseWords[clubPhraseWords.Length - 1] = "Club";
 
                 //assemble google query url
                 String url = "https://www.google.com/search?q=" + '"';
@@ -978,14 +993,43 @@ namespace First_Webcrawler
                 Console.WriteLine(URLs[i - 2]);
                 worksheet[CONTACT_URL_WRITING_COLUMN + i].Value = contactURLs[i - 2];
                 Console.WriteLine(contactURLs[i - 2]);
-                worksheet[EMAIL_WRITING_COLUMN + i].Value = contactInfo[i - 2, 0];
-                Console.WriteLine(contactInfo[i - 2, 0]);
-                worksheet[PHONE_WRITING_COLUMN + i].Value = contactInfo[i - 2, 1];
-                Console.WriteLine(contactInfo[i - 2, 1]);
-                worksheet[ADDRESS_WRITING_COLUMN + i].Value = contactInfo[i - 2, 2];
-                Console.WriteLine(contactInfo[i - 2, 2]);
-                worksheet[MEETING_LOCATION_WRITING_COLUMN + i].Value = contactInfo[i - 2, 2];
-                Console.WriteLine(contactInfo[i - 2, 2]);
+                //only write information if it's selected in the GUI
+                if (checkBoxEmailIsChecked)
+                {
+                    worksheet[EMAIL_WRITING_COLUMN + i].Value = contactInfo[i - 2, 0];
+                    Console.WriteLine(contactInfo[i - 2, 0]);
+                }
+                else
+                {
+                    Console.WriteLine("No email was written to the workbook.");
+                }
+                if (checkBoxPhoneIsChecked)
+                {
+                    worksheet[PHONE_WRITING_COLUMN + i].Value = contactInfo[i - 2, 1];
+                    Console.WriteLine(contactInfo[i - 2, 1]);
+                }
+                else
+                {
+                    Console.WriteLine("No phone number was written to the workbook.");
+                }
+                if (checkBoxAddressIsChecked)
+                {
+                    worksheet[ADDRESS_WRITING_COLUMN + i].Value = contactInfo[i - 2, 2];
+                    Console.WriteLine(contactInfo[i - 2, 2]);
+                }
+                else
+                {
+                    Console.WriteLine("No address was written to the workbook.");
+                }
+                if (checkBoxOtherIsChecked)
+                {
+                    worksheet[MEETING_LOCATION_WRITING_COLUMN + i].Value = contactInfo[i - 2, 2];
+                    Console.WriteLine(contactInfo[i - 2, 2]);
+                }
+                else
+                {
+                    Console.WriteLine("No additional information was written to the workbook.");
+                }
 
                 Console.WriteLine("");
             }
@@ -1045,16 +1089,33 @@ namespace First_Webcrawler
             for (int i = 0; i < 6; i++)
                 Console.WriteLine(CONTACTS_PAGE_SEARCH_KEYWORDS[1, i]);
 
-            //alter respective other search word entries
-            if (checkBoxOtherIsChecked)
+            //alter respective address search word entries
+            if (checkBoxAddressIsChecked)
             {
-                //address
                 CONTACTS_PAGE_SEARCH_KEYWORDS[2, 0] = "Address";
                 CONTACTS_PAGE_SEARCH_KEYWORDS[2, 1] = "address";
                 CONTACTS_PAGE_SEARCH_KEYWORDS[2, 2] = "at";
                 CONTACTS_PAGE_SEARCH_KEYWORDS[2, 3] = "Ave";
                 CONTACTS_PAGE_SEARCH_KEYWORDS[2, 4] = "Rd";
                 CONTACTS_PAGE_SEARCH_KEYWORDS[2, 5] = "address:";
+            }
+            else
+            {
+                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 0] = impossibleSearchPhrase;
+                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 1] = impossibleSearchPhrase;
+                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 2] = impossibleSearchPhrase;
+                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 3] = impossibleSearchPhrase;
+                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 4] = impossibleSearchPhrase;
+                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 5] = impossibleSearchPhrase;
+            }
+            Console.WriteLine("");
+            //CONTACTS_PAGE_SEARCH_KEYWORDS has arrays of length 6
+            for (int i = 0; i < 6; i++)
+                Console.WriteLine(CONTACTS_PAGE_SEARCH_KEYWORDS[2, i]);
+
+            //alter respective other search word entries
+            if (checkBoxOtherIsChecked)
+            {
                 //meeting location
                 CONTACTS_PAGE_SEARCH_KEYWORDS[3, 0] = "Location";
                 CONTACTS_PAGE_SEARCH_KEYWORDS[3, 1] = "meet";
@@ -1065,13 +1126,6 @@ namespace First_Webcrawler
             }
             else
             {
-                //address
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 0] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 1] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 2] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 3] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 4] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 5] = impossibleSearchPhrase;
                 //meeting location
                 CONTACTS_PAGE_SEARCH_KEYWORDS[3, 0] = impossibleSearchPhrase;
                 CONTACTS_PAGE_SEARCH_KEYWORDS[3, 1] = impossibleSearchPhrase;
@@ -1081,9 +1135,6 @@ namespace First_Webcrawler
                 CONTACTS_PAGE_SEARCH_KEYWORDS[3, 5] = impossibleSearchPhrase;
             }
             Console.WriteLine("");
-            //CONTACTS_PAGE_SEARCH_KEYWORDS has arrays of length 6
-            for (int i = 0; i < 6; i++)
-                Console.WriteLine(CONTACTS_PAGE_SEARCH_KEYWORDS[2, i]);
             //CONTACTS_PAGE_SEARCH_KEYWORDS has arrays of length 6
             for (int i = 0; i < 6; i++)
                 Console.WriteLine(CONTACTS_PAGE_SEARCH_KEYWORDS[3, i]);
@@ -1108,6 +1159,17 @@ namespace First_Webcrawler
             //reset the check state
             checkBoxPhoneIsChecked = checkBoxPhone.Checked;
             //checkBoxPhone.Checked = !checkBoxPhone.Checked;
+
+            resetContactsSearchKeywordsArray();
+
+            Console.WriteLine("Changed CONTACTS_PAGE_SEARCH_KEYWORDS");
+        }
+
+        private void checkBoxAddress_CheckedChanged(object sender, EventArgs e)
+        {
+            //reset the check state
+            checkBoxAddressIsChecked = checkBoxAddress.Checked;
+            //checkBoxOther.Checked = !checkBoxOther.Checked;
 
             resetContactsSearchKeywordsArray();
 
@@ -1141,6 +1203,7 @@ namespace First_Webcrawler
         private Button buttonWriteContacts;
         private Label label2;
         private Label label1;
+        private CheckBox checkBoxAddress;
     }
 }
 
