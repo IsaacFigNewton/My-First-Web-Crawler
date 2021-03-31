@@ -69,7 +69,7 @@ namespace First_Webcrawler
         public static String[] URL_REMOVE_EXTENSIONS = {"default", "index", "Default" };
         //in case the scraper can't get the contact page for whatever reason, use the below information to brute force the contact URL
         public static String[] URL_PRE_EXTENSIONS = {"", "about/", "Club/", "info/", "page/" };
-        public static String[] URL_EXTENSIONS = {"contact", "contact-us", "contact_us",  "Contact", "about-us", "about", "contact_us", "contact-form", "contactform", "join-us", "contactus","ContactUs", "About-Us"};
+        public static String[] URL_EXTENSIONS = {"contact", "contact-us", "contact_us",  "Contact", "contactus", "ContactUs", "contact_us", "contact-form", "contactform", "about-us", "about", "join-us", "About-Us"};
         public static String[] URL_EXTENSION_EXTENSIONS = { "", "2", "-2" };
         public static String[] URL_TYPE_EXTENSIONS = {"", ".html", ".htm", ".aspx", ".php", ".shtml", ".asp"};
         //if unable to find contact page this way, look for facebook link, go there, and then append "about"
