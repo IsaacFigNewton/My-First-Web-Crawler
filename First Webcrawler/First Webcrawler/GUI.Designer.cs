@@ -59,7 +59,8 @@ namespace First_Webcrawler
         //all lowercase to expedite searches
         public static String[] LINK_SEARCH_KEYWORDS = { "contact", "about", "meet", "board", "coordinators" };
         public static String[] STATE_INITIALS = { "AL", "", ""};
-        public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = { {"Email", "email", "mailto:", "@", "(at)", "{at}"}, { "PHONE", "Phone", "phone", "tel:-", "-", "-" }, { "Address", "address", "at", "address:", "Ave", "Rd" }, { "Location", "meet", "location", "Ave", "Rd", "Ln" } };
+        //the next link or info-specific indicator should be searched for after one of these search keywords is found
+        public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = { {"Email", "email", "mailto:", "@"}, { "PHONE", "Phone", "phone", "tel:-" }, { "Address", "address", "Location", "location"}, { "meet", "Ave", "Rd", "Ln" } };
         //# of types of contact information in the array above
         public static int NUMBER_OF_CONTACT_TYPES = 3;
         //# of keyword items in each array within the array of contact keywords above
@@ -68,8 +69,8 @@ namespace First_Webcrawler
         //if the website's link goes to something including one of the following phrases(paired with an extension from the URL_TYPE_EXTENSIONS list), just remove it and then brute force the contact URL with the following extension words/phrases
         public static String[] URL_REMOVE_EXTENSIONS = {"default", "index", "Default" };
         //in case the scraper can't get the contact page for whatever reason, use the below information to brute force the contact URL
-        public static String[] URL_PRE_EXTENSIONS = {"", "about/", "Club/", "info/", "page/" };
-        public static String[] URL_EXTENSIONS = {"contact", "contact-us", "contact_us",  "Contact", "contactus", "ContactUs", "contact_us", "contact-form", "contactform", "about-us", "about", "join-us", "About-Us"};
+        public static String[] URL_PRE_EXTENSIONS = {"", "#", "about/", "Club/", "info/", "page/" };
+        public static String[] URL_EXTENSIONS = {"contact", "contact-us", "contact_us",  "Contact", "contactus", "ContactUs", "contact_us", "contact-form", "contactform", "Contact-Us", "about-us", "about", "join-us", "About-Us"};
         public static String[] URL_EXTENSION_EXTENSIONS = { "", "2", "-2" };
         public static String[] URL_TYPE_EXTENSIONS = {"", ".html", ".htm", ".aspx", ".php", ".shtml", ".asp"};
         //if unable to find contact page this way, look for facebook link, go there, and then append "about"
