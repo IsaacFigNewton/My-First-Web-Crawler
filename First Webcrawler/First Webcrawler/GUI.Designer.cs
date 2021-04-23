@@ -14,6 +14,7 @@ using System.IO;
 /*
  * Agenda:
  * **************************************************************************************************************************************************
+ * For some reason about pages are still being prioritized by the crawler over contact pages in either the link analysis section, the brute force section, or the keyword ordering
  * The parseContactWithKeywordLocation method needs some code to find parsing characters before starting index so as to get entirety of contact in case it starts in the middle of the contact
  * For whatever reason, the accuracy of contact parsing is at least partially dependent on NUMBER_OF_ENTRIES, so that's another problem
  * The lower methods need corrections so that the webcrawler only collects the info corresponding to the selections in the GUI
