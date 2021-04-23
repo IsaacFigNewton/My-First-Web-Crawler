@@ -11,21 +11,32 @@ using IronXL;
 using System.Net;
 using System.IO;
 
+/*
+ * Agenda:
+ * **************************************************************************************************************************************************
+ * The parseContactWithKeywordLocation method needs some code to find parsing characters before starting index so as to get entirety of contact in case it starts in the middle of the contact
+ * For whatever reason, the accuracy of contact parsing is at least partially dependent on NUMBER_OF_ENTRIES, so that's another problem
+ * The lower methods need corrections so that the webcrawler only collects the info corresponding to the selections in the GUI
+ * If a source URL is empty, the crawler should just ignore it, not spend like 20 seconds "thinking about it"
+ * When the crawler reads source URLs from workbook, make it so it reads hyperlinks, then the text if a hyperlink is unavailable
+ * Refine contact search keywords after previous stuff to make searches more accurate
+*/
+
 namespace First_Webcrawler
 {
     public partial class GUI : Form
     {
         //class variables
-        //-80 just for testing porpoises
-        public static int NUMBER_OF_ENTRIES = 321;
+        //-10 just for testing porpoises
+        public static int NUMBER_OF_ENTRIES = 10;
         public static int NAMES_COLUMN = 0;
         public static int READING_COLUMN = 1;
-        public static String MAIN_URL_WRITING_COLUMN = "E";
-        public static String CONTACT_URL_WRITING_COLUMN = "D";
-        public static String EMAIL_WRITING_COLUMN = "C";
-        public static String PHONE_WRITING_COLUMN = "H";
-        public static String ADDRESS_WRITING_COLUMN = "I";
-        public static String MEETING_LOCATION_WRITING_COLUMN = "J";
+        public static String MAIN_URL_WRITING_COLUMN = "J";
+        public static String CONTACT_URL_WRITING_COLUMN = "H";
+        public static String EMAIL_WRITING_COLUMN = "G";
+        public static String PHONE_WRITING_COLUMN = "K";
+        public static String ADDRESS_WRITING_COLUMN = "D";
+        public static String MEETING_LOCATION_WRITING_COLUMN = "L";
 
         public static int URLIndex = 0;
         //URLs that require Googling
@@ -41,8 +52,8 @@ namespace First_Webcrawler
         public static string[] KNOWN_CONTACT_URLS_LOCATOR_KEYPHRASES = {"web address:- <a href=", ""};
         //2-dimensional array of contact info in String form
         //ex: int[,] array2D = new int[,] { {email1, phone1, other1}, {email2, phone2, other2}, {email3, phone3, other3}};
-        public static String[,] contactInfo = new String[NUMBER_OF_ENTRIES, 3];
-        public static String NAME_OF_IO_DOC = "Hyperlink to URL to Info 2.xlsx"; //"UK Camera Clubs 11-20-20 (Prepped for Web Crawler).xlsx";
+        public static String[,] contactInfo = new String[NUMBER_OF_ENTRIES, 4];
+        public static String NAME_OF_IO_DOC = "UK Camera Clubs 11-20-20 (Prepped for Web Crawler).xlsx"; //"UK Camera Clubs 11-20-20 (Prepped for Web Crawler).xlsx";
         //Clubs from NCPF, EAF, KCPA, MCPF, SPF
         public static String SHEET_NAME = "Sheet1";
         public static String PATH_OF_IO_DOC = "C:\\Users\\Owner\\Desktop\\" + NAME_OF_IO_DOC;
@@ -59,12 +70,15 @@ namespace First_Webcrawler
         //all lowercase to expedite searches
         public static String[] LINK_SEARCH_KEYWORDS = { "contact", "about", "meet", "board", "coordinators" };
         public static String[] STATE_INITIALS = { "AL", "", ""};
+
         //the next link or info-specific indicator should be searched for after one of these search keywords is found
-        public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = { {"Email", "email", "mailto:", "@"}, { "PHONE", "Phone", "phone", "tel:-" }, { "Address", "address", "Location", "location"}, { "meet", "Ave", "Rd", "Ln" } };
+        public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = { {"Email", "email", "mailto:", "@"}, { "Phone", "phone", "tel:-", "1(" }, { "Address", "address", "Location", "location"}, { "meet", "Ave", "Rd", "Ln" } };
         //# of types of contact information in the array above
-        public static int NUMBER_OF_CONTACT_TYPES = 3;
+        public static int NUMBER_OF_CONTACT_TYPES = 4;
         //# of keyword items in each array within the array of contact keywords above
-        public static int NUMBER_OF_CONTACT_PAGE_SEARCH_KEYWORDS = 6;
+        public static int NUMBER_OF_CONTACT_PAGE_SEARCH_KEYWORDS = 4;
+        //maximum search keyword length to tell when to stop when looking for contact keywords
+        public static int MAX_CONTACT_KEYWORD_LENGTH = 8;
 
         //if the website's link goes to something including one of the following phrases(paired with an extension from the URL_TYPE_EXTENSIONS list), just remove it and then brute force the contact URL with the following extension words/phrases
         public static String[] URL_REMOVE_EXTENSIONS = {"default", "index", "Default" };
@@ -520,92 +534,49 @@ namespace First_Webcrawler
                         //print first 4 chars of HTML as indication of proper functioning
                         Console.WriteLine(html.Substring(0, 15));
 
+                        //the index of some character in the HTML
                         int i = 0;
-                        //read through html until it gets to the end of the body
-                        while (!endOfBody)
+                        //read through html until it gets to the end of the html or body
+                        while (!(i >= html.Length - MAX_CONTACT_KEYWORD_LENGTH || endOfBody))
                         {
                             //read through all of CONTACTS_PAGE_SEARCH_KEYWORDS arrays
                             for (int j = 0; j < NUMBER_OF_CONTACT_TYPES; j++)
                             {
+                                //skip values of j that correspond to unwanted contact types
+                                if (j == 0 && checkBoxEmailIsChecked == false)
+                                    j++;
+                                if (j == 1 && checkBoxPhoneIsChecked == false)
+                                    j++;
+                                if (j == 2 && checkBoxAddressIsChecked == false)
+                                    j++;
+                                if (j == 3 && checkBoxOtherIsChecked == false)
+                                    break;
+
                                 //read through the items of the arrays of the array (ex, CONTACTS_PAGE_SEARCH_KEYWORDS array 1, item 3)
                                 for (int k = 0; k < NUMBER_OF_CONTACT_PAGE_SEARCH_KEYWORDS; k++)                                         //problem here
                                 {
                                     //if the site's HTML includes the keywords somewhere, look nearby it for the contacts information
+                                    //IndexOutOfRangeException in the below substring statement because you need to update NUMBER_OF_CONTACT_TYPES and NUMBER_OF_CONTACT_PAGE_SEARCH_KEYWORDS
                                     if (html.Substring(i, CONTACTS_PAGE_SEARCH_KEYWORDS[j, k].Length) == (CONTACTS_PAGE_SEARCH_KEYWORDS[j, k]))
                                     {
-                                        //set the contact info to that found, checking to make sure that it's entering the right type of info
-                                        //email
-                                        if (j == 0 && checkBoxEmailIsChecked == true)
-                                        {
-                                            //This is where the email is looked for in different places around each keyword
-                                            String contact = "No email found";
-                                            if (k == 0)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if (k == 1)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if(k == 2)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if (k == 3)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if (k == 4)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if (k == 5)
-                                                contact = html.Substring(i - 5, 10);
+                                        //This is where the various contact types are looked for in different places around each keyword
+                                        String contact = "No " + CONTACTS_PAGE_SEARCH_KEYWORDS[j, 0].ToUpper() + " found";
 
-                                            contactInfo[URLIndex, 0] = "Replace this string with the string gathered by the above code";
-                                            Console.WriteLine("Found EMAIL contact phrase in HTML at character #" + i);
-                                            Console.WriteLine(contact);
-                                        }
-                                        //phone
-                                        else if (j == 1 && checkBoxPhoneIsChecked == true)
-                                        {
-                                            //This is where the phone number is looked for in different places around each keyword
-                                            String contact = "No phone # found";
-                                            if (k == 0)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if (k == 1)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if (k == 2)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if (k == 3)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if (k == 4)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if (k == 5)
-                                                contact = html.Substring(i - 5, 10);
+                                        //maybe modify contact text in case extra text further is included in parsing
+                                        contact = parseContactWithKeywordLocation(html, CONTACTS_PAGE_SEARCH_KEYWORDS[j, k], i);
+                                        contactInfo[URLIndex, j] = contact;
 
-                                            contactInfo[URLIndex, 1] = "Replace this string with the string gathered by the above code";
-                                            Console.WriteLine("Found PHONE contact phrase in HTML at character #" + i);
-                                            Console.WriteLine(contact);
-                                        }
-                                        //other
-                                        else if (j == 2 && checkBoxOtherIsChecked == true)
-                                        {
-                                            //This is where the other stuff is looked for in different places around each keyword
-                                            String contact = "Nothing else found";
-                                            if (k == 0)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if (k == 1)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if (k == 2)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if (k == 3)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if (k == 4)
-                                                contact = html.Substring(i - 5, 10);
-                                            else if (k == 5)
-                                                contact = html.Substring(i - 5, 10);
-
-                                            contactInfo[URLIndex, 2] = "Replace this string with the string gathered by the above code";
-                                            Console.WriteLine("Found OTHER contact phrase in HTML at character #" + i);
-                                            Console.WriteLine(contact);
-                                        }
+                                        Console.WriteLine("Found " + CONTACTS_PAGE_SEARCH_KEYWORDS[j, 0].ToUpper() + " contact phrase in HTML at character #" + i);
+                                        Console.WriteLine("Contact phrase: '" + contact + "'");
+                                        
+                                        //add the length of the search keyword found to i so it can rule that phrase out
+                                        i += CONTACTS_PAGE_SEARCH_KEYWORDS[j, k].Length;
                                     }
                                 }
                             }
 
-                            //move on to the next HTML once it's finished reading through this HTML
-                            if (html.Substring(i, 14) == ("</body>"))
+                            //move on to the next HTML once it's finished reading through this HTML (up to the point of the last place to read the contact keywords from)
+                            if (html.Substring(i + MAX_CONTACT_KEYWORD_LENGTH, 7) == ("</body>"))
                             {
                                 endOfBody = true;
                                 break;
@@ -620,14 +591,14 @@ namespace First_Webcrawler
                     {
                         //set contact info of the contact to show that there is no contact info for it
                         //email
-                        contactInfo[URLIndex, 0] = "Somehow there was no html at this URL";
+                        contactInfo[URLIndex, 0] = "There was no html at this URL";
                         //phone
-                        contactInfo[URLIndex, 1] = "Somehow there was no html at this URL";
+                        contactInfo[URLIndex, 1] = "";
                         //other
-                        contactInfo[URLIndex, 2] = "Somehow there was no html at this URL";
+                        contactInfo[URLIndex, 2] = "";
 
                         //debugging
-                        Console.WriteLine("Somehow there was no html at this URL");
+                        Console.WriteLine("There was no html at this URL");
                     }
                 }
                 //if the url provided is empty
@@ -792,6 +763,39 @@ namespace First_Webcrawler
                 return baseURL;
             //otherwise, return only the first part of the URL 
             return baseURL.Substring(0, baseURL.LastIndexOf("/"));
+        }
+
+        private static String parseContactWithKeywordLocation(String html, String keyword, int indexInHTML)
+        {
+            char[] parsingChars = { ' ', '<' };
+            int searchKeyLeng = keyword.Length;
+            int j = 0;
+            char character;
+            //offset so that the contact info. text phrase starts on the right word/phrase
+            int offset = 4;
+
+            //go through all characters in html after the keyword because I'm too lazy to write better code right now
+            while (j + indexInHTML < html.Length - 1)
+            {
+                //update character value
+                character = Convert.ToChar(html.Substring(indexInHTML + searchKeyLeng + j + offset, 1));
+
+                //go through every possible parsing character
+                foreach (char parsingChar in parsingChars)
+                {
+                    //if the character at index (search keyword length + m + offset <for good measure>) is equal to one of the parsing characters from list
+                    if (character.Equals(parsingChar))
+                    {
+                        //return the string from after the search keyword to the length m
+                        return html.Substring(indexInHTML + searchKeyLeng + offset, j);
+                    }
+                }
+
+                //move to the next character in the html
+                j++;
+            }
+
+            return "Couldn't parse the text after the contact information keyword.";
         }
 
         private static String checkForFacebookLink(String url)
