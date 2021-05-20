@@ -14,14 +14,15 @@ using System.IO;
 /*
  * Agenda:
  * **************************************************************************************************************************************************
+ * Do this for the workshops list before all others --> The parseContactWithKeywordLocation method needs some code to find parsing characters before starting index so as to get entirety of contact in case it starts in the middle of the contact
  * For some reason about pages are still being prioritized by the crawler over contact pages in either the link analysis section, the brute force section, or the keyword ordering
- * The parseContactWithKeywordLocation method needs some code to find parsing characters before starting index so as to get entirety of contact in case it starts in the middle of the contact
  * For whatever reason, the accuracy of contact parsing is at least partially dependent on NUMBER_OF_ENTRIES, so that's another problem
  * The lower methods need corrections so that the webcrawler only collects the info corresponding to the selections in the GUI
  * If a source URL is empty, the crawler should just ignore it, not spend like 20 seconds "thinking about it"
  * When the crawler reads source URLs from workbook, make it so it reads hyperlinks, then the text if a hyperlink is unavailable, see IronXL docs for help: https://ironsoftware.com/csharp/excel/object-reference/api/IronXL.Cell.html
  * Refine contact search keywords after previous stuff to make searches more accurate
  * Steps 2 and 4 give the URL indices of url's instead of row numbers and step 3 needs to stop after reading to the number of entries
+ * Make it so that searches for the contact search keyphrases aren't case-sensitive
 */
 
 namespace First_Webcrawler
@@ -32,18 +33,23 @@ namespace First_Webcrawler
         //-10 just for testing porpoises
         public static int NUMBER_OF_ENTRIES = 50;
         public static int NAMES_COLUMN = 0;
-        public static int rowOffset = 35;
+        //default offset should be 1, for headers
+        public static int rowOffset = 1;
         public static int READING_COLUMN = 1;
-        public static String MAIN_URL_WRITING_COLUMN = "G";
-        public static String CONTACT_URL_WRITING_COLUMN = "F";
-        public static String EMAIL_WRITING_COLUMN = "E";
+        public static String MAIN_URL_WRITING_COLUMN = "P";
+        public static String CONTACT_URL_WRITING_COLUMN = "Q";
+        //email = cost
+        public static String EMAIL_WRITING_COLUMN = "F";
+        //phone = yes or no lodging
+        public static String PHONE_WRITING_COLUMN = "G";
+        //address = destination
         public static String ADDRESS_WRITING_COLUMN = "D";
-        public static String PHONE_WRITING_COLUMN = "K";
-        public static String MEETING_LOCATION_WRITING_COLUMN = "L";
+        //other = date of start
+        public static String OTHER_WRITING_COLUMN = "K";
         
         public static String SHEET_NAME = "Sheet1";
-        public static String NAME_OF_IO_DOC = "Hyperlink to URL to Info.xlsx";
-        public static String PATH_OF_IO_DOC = "C:\\Users\\Owner\\Desktop\\Use to Improve Webcrawler & Parser\\" + NAME_OF_IO_DOC;
+        public static String NAME_OF_IO_DOC = "Workshop Listing URLs Prepped for Webcrawler.xlsx";//"Hyperlink to URL to Info.xlsx";//
+        public static String PATH_OF_IO_DOC = "C:\\Users\\Owner\\Desktop\\" + NAME_OF_IO_DOC; //Use to Improve Webcrawler & Parser\\
 
 
         public static int URLIndex;
@@ -107,13 +113,14 @@ namespace First_Webcrawler
         public GUI()
         {
             InitializeComponent();
-            buttonReadSites.Click += new EventHandler(this.buttonReadSites_Click);
+            buttonScrapeURLs.Click += new EventHandler(this.buttonScrapeURLs_Click);
             checkBoxEmail.CheckedChanged += new EventHandler(this.checkBoxEmail_CheckedChanged);
             checkBoxPhone.CheckedChanged += new EventHandler(this.checkBoxPhone_CheckedChanged);
             checkBoxAddress.CheckedChanged += new EventHandler(this.checkBoxAddress_CheckedChanged);
             checkBoxOther.CheckedChanged += new EventHandler(this.checkBoxOther_CheckedChanged);
-            buttonLocateContacts.Click += new EventHandler(this.buttonLocateContacts_Click);
             buttonGetURLs.Click += new EventHandler(this.buttonGetURLs_Click);
+            buttonLocateContacts.Click += new EventHandler(this.buttonLocateContacts_Click);
+            buttonReadSites.Click += new EventHandler(this.buttonReadSites_Click);
             buttonWriteContacts.Click += new EventHandler(this.buttonWriteContacts_Click);
         }
 
@@ -146,38 +153,53 @@ namespace First_Webcrawler
             //alter respective email search word entries
             if (checkBoxEmailIsChecked)
             {
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 0] = "Email";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 1] = "email";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 2] = "mailto:";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 3] = "@";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[0, 0] = "Email";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[0, 1] = "email";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[0, 2] = "mailto:";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[0, 3] = "@";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 0] = "$";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 1] = "Price";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 2] = "Cost";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 3] = "per person";
             }
 
             //alter respective phone search word entries
             if (checkBoxPhoneIsChecked)
             {
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 0] = "Phone";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 1] = "phone";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 2] = "tel:-";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 3] = "1(";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[1, 0] = "Phone";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[1, 1] = "phone";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[1, 2] = "tel:-";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[1, 3] = "1(";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 0] = "lodging";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 1] = "occupancy";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 2] = "overnight";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 3] = "stay";
             }
 
             //alter respective address search word entries
             if (checkBoxAddressIsChecked)
             {
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 0] = "Address";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 1] = "address";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 2] = "Location";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 3] = "location";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[2, 0] = "Address";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[2, 1] = "address";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[2, 2] = "Location";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[2, 3] = "location";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 0] = "Yellowstone";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 1] = "Glacier National Park";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 2] = "Colorado";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 3] = "coast";
             }
 
             //alter respective other search word entries
             if (checkBoxOtherIsChecked)
             {
-                //meeting location
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 0] = "meet";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 1] = "Ave";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 2] = "Rd";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 3] = "Ln";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[3, 0] = "meet";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[3, 1] = "Ave";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[3, 2] = "Rd";
+                //CONTACTS_PAGE_SEARCH_KEYWORDS[3, 3] = "Ln";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 0] = "Date";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 1] = "date";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 2] = "September";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 3] = "June";
             }
 
             //print updated keyword arrays
@@ -242,7 +264,42 @@ namespace First_Webcrawler
             Console.WriteLine("Changed CONTACTS_PAGE_SEARCH_KEYWORDS");
         }
 
-        //                                                              End of GUI updating area, beginning of source url locating/gathering section
+        //                                                              End of GUI updating area, beginning of scraping from urls section
+        //*****************************************************************************************************************************************************************************************
+
+        private void buttonScrapeURLs_Click(object sender, EventArgs e)
+        {
+            //read the URLs from the excel doc to an array of strings
+            WorkBook workbook = WorkBook.Load(PATH_OF_IO_DOC);
+            WorkSheet worksheet = workbook.GetWorkSheet(SHEET_NAME);
+
+            int rowCount = NUMBER_OF_ENTRIES;
+            //start at rowOffset to skip the header
+            for (int i = rowOffset; i < rowCount; i++)
+            {
+                //get value by cell address
+                //string address_val = ws["A" + rowCount].ToString();
+                //get value by row and column indexing
+                string index_val = worksheet.Rows[i].Columns[READING_COLUMN].ToString();
+
+                ////read each cell's value to the array of URLs
+                //URLs[i - rowOffset] = index_val;
+                ////set the URL to an empty string if it's originally a null value
+                //if (URLs[i] == null)
+                //    URLs[i] = "";
+
+                ////check to make sure correct values are collected
+                //Console.WriteLine(i + "'{0}'", index_val);
+
+                //scrape the info. from the url
+                getContactsFromURL(index_val);
+            }
+            Console.WriteLine("Finished scraping URLs");
+            Console.WriteLine("");
+
+        }
+
+        //                                                              End of scraping from URLs section, beginning of source url gathering section
         //*****************************************************************************************************************************************************************************************
 
         private void buttonGetURLs_Click(object sender, EventArgs e)
@@ -275,12 +332,11 @@ namespace First_Webcrawler
                 Console.WriteLine(i + "'{0}'", index_val);
             }
             Console.WriteLine("Finished getting site URLs");
-            Console.WriteLine("Focus on getting/reading contact URLs");
             Console.WriteLine("");
 
         }
 
-        //                                                              End of source url locating/gathering section, beginning of main page url locating/gathering section
+        //                                                              End of source url gathering section, beginning of main page url locating/scraping section
         //*****************************************************************************************************************************************************************************************
 
         private void buttonLocateContacts_Click(object sender, EventArgs e)
@@ -602,7 +658,7 @@ namespace First_Webcrawler
             }
         }
 
-        //                                                              End of main page url locating/gathering section, beginning of contact locating/gathering section
+        //                                                              End of main page url locating/scraping section, beginning of contact locating/scraping section
         //*****************************************************************************************************************************************************************************************
 
         private void buttonReadSites_Click(object sender, EventArgs e)
@@ -611,7 +667,7 @@ namespace First_Webcrawler
             //basically the same as buttonLocateContacts_Click(), but it stores the contact data collected
             try
             {
-                URLIndex = 1;
+                URLIndex = rowOffset;
 
                 while (URLIndex < NUMBER_OF_ENTRIES)
                 {
@@ -1125,7 +1181,7 @@ namespace First_Webcrawler
             return "The URLIndex was larger than the number of entries being read";
         }
 
-        //                                                                               End of contact locating/gathering section, beginning of contact info writing section
+        //                                                                               End of contact locating/scraping section, beginning of contact info writing section
         //*************************************************************************************************************************************************************************
 
         private void buttonWriteContacts_Click(object sender, EventArgs e)
@@ -1178,7 +1234,7 @@ namespace First_Webcrawler
                 }
                 if (checkBoxOtherIsChecked)
                 {
-                    worksheet[MEETING_LOCATION_WRITING_COLUMN + i].Value = contactInfo[i - offset, 2];
+                    worksheet[OTHER_WRITING_COLUMN + i].Value = contactInfo[i - offset, 2];
                     Console.WriteLine(contactInfo[i - offset, 2]);
                 }
                 else
@@ -1210,9 +1266,10 @@ namespace First_Webcrawler
         private CheckBox checkBoxPhone;
         private CheckBox checkBoxEmail;
         private Button buttonWriteContacts;
+        private CheckBox checkBoxAddress;
+        private Button buttonScrapeURLs;
         private Label label2;
         private Label label1;
-        private CheckBox checkBoxAddress;
     }
 }
 

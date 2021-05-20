@@ -21,6 +21,8 @@ namespace First_Webcrawler
         {
             this.pageControl = new System.Windows.Forms.TabControl();
             this.page1 = new System.Windows.Forms.TabPage();
+            this.buttonScrapeURLs = new System.Windows.Forms.Button();
+            this.checkBoxAddress = new System.Windows.Forms.CheckBox();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.buttonWriteContacts = new System.Windows.Forms.Button();
@@ -33,7 +35,6 @@ namespace First_Webcrawler
             this.labelInfoToGather = new System.Windows.Forms.Label();
             this.title1 = new System.Windows.Forms.Label();
             this.page2 = new System.Windows.Forms.TabPage();
-            this.checkBoxAddress = new System.Windows.Forms.CheckBox();
             this.pageControl.SuspendLayout();
             this.page1.SuspendLayout();
             this.SuspendLayout();
@@ -50,6 +51,7 @@ namespace First_Webcrawler
             // 
             // page1
             // 
+            this.page1.Controls.Add(this.buttonScrapeURLs);
             this.page1.Controls.Add(this.checkBoxAddress);
             this.page1.Controls.Add(this.label2);
             this.page1.Controls.Add(this.label1);
@@ -70,35 +72,63 @@ namespace First_Webcrawler
             this.page1.Text = "page1";
             this.page1.UseVisualStyleBackColor = true;
             // 
+            // buttonScrapeURLs
+            // 
+            this.buttonScrapeURLs.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonScrapeURLs.Location = new System.Drawing.Point(105, 341);
+            this.buttonScrapeURLs.Name = "buttonScrapeURLs";
+            this.buttonScrapeURLs.Size = new System.Drawing.Size(227, 73);
+            this.buttonScrapeURLs.TabIndex = 12;
+            this.buttonScrapeURLs.Text = "Scrape Pages from List of URLs";
+            this.buttonScrapeURLs.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxAddress
+            // 
+            this.checkBoxAddress.AutoSize = true;
+            this.checkBoxAddress.Checked = true;
+            this.checkBoxAddress.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxAddress.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxAddress.Location = new System.Drawing.Point(105, 231);
+            this.checkBoxAddress.Name = "checkBoxAddress";
+            this.checkBoxAddress.Size = new System.Drawing.Size(110, 29);
+            this.checkBoxAddress.TabIndex = 11;
+            this.checkBoxAddress.Text = "Address";
+            this.checkBoxAddress.UseVisualStyleBackColor = true;
+            // 
             // label2
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(414, 436);
+            this.label2.Location = new System.Drawing.Point(350, 424);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(446, 20);
             this.label2.TabIndex = 10;
             this.label2.Text = "(Careful when testing as it can/will break the testing workbook)";
+            this.label2.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.label2.Click += new System.EventHandler(this.label2_Click);
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(470, 406);
+            this.label1.Location = new System.Drawing.Point(406, 394);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(390, 20);
             this.label1.TabIndex = 9;
             this.label1.Text = "DO NOT PRESS UNTIL DONE WITH OTHER PARTS";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.label1.Click += new System.EventHandler(this.label1_Click);
             // 
             // buttonWriteContacts
             // 
             this.buttonWriteContacts.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonWriteContacts.Location = new System.Drawing.Point(866, 372);
+            this.buttonWriteContacts.Location = new System.Drawing.Point(469, 465);
             this.buttonWriteContacts.Name = "buttonWriteContacts";
             this.buttonWriteContacts.Size = new System.Drawing.Size(227, 84);
             this.buttonWriteContacts.TabIndex = 8;
-            this.buttonWriteContacts.Text = "Write Contact Information to Excel Sheet";
+            this.buttonWriteContacts.Text = "Write  Information to Excel Sheet";
             this.buttonWriteContacts.UseVisualStyleBackColor = true;
+            this.buttonWriteContacts.Click += new System.EventHandler(this.buttonWriteContacts_Click_1);
             // 
             // checkBoxOther
             // 
@@ -199,19 +229,6 @@ namespace First_Webcrawler
             this.page2.Text = "page2";
             this.page2.UseVisualStyleBackColor = true;
             // 
-            // checkBoxAddress
-            // 
-            this.checkBoxAddress.AutoSize = true;
-            this.checkBoxAddress.Checked = true;
-            this.checkBoxAddress.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxAddress.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.checkBoxAddress.Location = new System.Drawing.Point(105, 231);
-            this.checkBoxAddress.Name = "checkBoxAddress";
-            this.checkBoxAddress.Size = new System.Drawing.Size(110, 29);
-            this.checkBoxAddress.TabIndex = 11;
-            this.checkBoxAddress.Text = "Address";
-            this.checkBoxAddress.UseVisualStyleBackColor = true;
-            // 
             // GUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -224,6 +241,21 @@ namespace First_Webcrawler
             this.page1.ResumeLayout(false);
             this.page1.PerformLayout();
             this.ResumeLayout(false);
+
+        }
+
+        private void buttonWriteContacts_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
 
         }
     }
