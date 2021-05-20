@@ -19,8 +19,9 @@ using System.IO;
  * For whatever reason, the accuracy of contact parsing is at least partially dependent on NUMBER_OF_ENTRIES, so that's another problem
  * The lower methods need corrections so that the webcrawler only collects the info corresponding to the selections in the GUI
  * If a source URL is empty, the crawler should just ignore it, not spend like 20 seconds "thinking about it"
- * When the crawler reads source URLs from workbook, make it so it reads hyperlinks, then the text if a hyperlink is unavailable
+ * When the crawler reads source URLs from workbook, make it so it reads hyperlinks, then the text if a hyperlink is unavailable, see IronXL docs for help: https://ironsoftware.com/csharp/excel/object-reference/api/IronXL.Cell.html
  * Refine contact search keywords after previous stuff to make searches more accurate
+ * Steps 2 and 4 give the URL indices of url's instead of row numbers and step 3 needs to stop after reading to the number of entries
 */
 
 namespace First_Webcrawler
@@ -29,17 +30,23 @@ namespace First_Webcrawler
     {
         //class variables
         //-10 just for testing porpoises
-        public static int NUMBER_OF_ENTRIES = 10;
+        public static int NUMBER_OF_ENTRIES = 50;
         public static int NAMES_COLUMN = 0;
+        public static int rowOffset = 35;
         public static int READING_COLUMN = 1;
-        public static String MAIN_URL_WRITING_COLUMN = "J";
-        public static String CONTACT_URL_WRITING_COLUMN = "H";
-        public static String EMAIL_WRITING_COLUMN = "G";
-        public static String PHONE_WRITING_COLUMN = "K";
+        public static String MAIN_URL_WRITING_COLUMN = "G";
+        public static String CONTACT_URL_WRITING_COLUMN = "F";
+        public static String EMAIL_WRITING_COLUMN = "E";
         public static String ADDRESS_WRITING_COLUMN = "D";
+        public static String PHONE_WRITING_COLUMN = "K";
         public static String MEETING_LOCATION_WRITING_COLUMN = "L";
+        
+        public static String SHEET_NAME = "Sheet1";
+        public static String NAME_OF_IO_DOC = "Hyperlink to URL to Info.xlsx";
+        public static String PATH_OF_IO_DOC = "C:\\Users\\Owner\\Desktop\\Use to Improve Webcrawler & Parser\\" + NAME_OF_IO_DOC;
 
-        public static int URLIndex = 0;
+
+        public static int URLIndex;
         //URLs that require Googling
         //2, 8
         //Empty cells not included in list of sites
@@ -54,11 +61,7 @@ namespace First_Webcrawler
         //2-dimensional array of contact info in String form
         //ex: int[,] array2D = new int[,] { {email1, phone1, other1}, {email2, phone2, other2}, {email3, phone3, other3}};
         public static String[,] contactInfo = new String[NUMBER_OF_ENTRIES, 4];
-        public static String NAME_OF_IO_DOC = "UK Camera Clubs 11-20-20 (Prepped for Web Crawler).xlsx"; //"UK Camera Clubs 11-20-20 (Prepped for Web Crawler).xlsx";
-        //Clubs from NCPF, EAF, KCPA, MCPF, SPF
-        public static String SHEET_NAME = "Sheet1";
-        public static String PATH_OF_IO_DOC = "C:\\Users\\Owner\\Desktop\\" + NAME_OF_IO_DOC;
-
+        
         public static Boolean checkBoxEmailIsChecked = true;
         public static Boolean checkBoxPhoneIsChecked = true;
         public static Boolean checkBoxAddressIsChecked = true;
@@ -72,17 +75,19 @@ namespace First_Webcrawler
         public static String[] LINK_SEARCH_KEYWORDS = { "contact", "about", "meet", "board", "coordinators" };
         public static String[] STATE_INITIALS = { "AL", "", ""};
 
-        //the next link or info-specific indicator should be searched for after one of these search keywords is found
-        public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = { {"Email", "email", "mailto:", "@"}, { "Phone", "phone", "tel:-", "1(" }, { "Address", "address", "Location", "location"}, { "meet", "Ave", "Rd", "Ln" } };
+
         //# of types of contact information in the array above
         public static int NUMBER_OF_CONTACT_TYPES = 4;
         //# of keyword items in each array within the array of contact keywords above
         public static int NUMBER_OF_CONTACT_PAGE_SEARCH_KEYWORDS = 4;
+        //the next link or info-specific indicator should be searched for after one of these search keywords is found
+        //the below array can be empty because it's "filled" by the resetContactsSearchKeywordsArray(); method
+        public static String[,] CONTACTS_PAGE_SEARCH_KEYWORDS = new String[NUMBER_OF_CONTACT_TYPES, NUMBER_OF_CONTACT_PAGE_SEARCH_KEYWORDS];
         //maximum search keyword length to tell when to stop when looking for contact keywords
         public static int MAX_CONTACT_KEYWORD_LENGTH = 8;
 
         //if the website's link goes to something including one of the following phrases(paired with an extension from the URL_TYPE_EXTENSIONS list), just remove it and then brute force the contact URL with the following extension words/phrases
-        public static String[] URL_REMOVE_EXTENSIONS = {"default", "index", "Default" };
+        public static String[] URL_REMOVE_EXTENSIONS = { "Index", "index", "Home", "home", "Default", "default", "Welcome", "welcome" };
         //in case the scraper can't get the contact page for whatever reason, use the below information to brute force the contact URL
         public static String[] URL_PRE_EXTENSIONS = {"", "#", "about/", "Club/", "info/", "page/" };
         public static String[] URL_EXTENSIONS = {"contact", "contact-us", "contact_us",  "Contact", "contactus", "ContactUs", "contact_us", "contact-form", "contactform", "Contact-Us", "about-us", "about", "join-us", "About-Us"};
@@ -105,6 +110,7 @@ namespace First_Webcrawler
             buttonReadSites.Click += new EventHandler(this.buttonReadSites_Click);
             checkBoxEmail.CheckedChanged += new EventHandler(this.checkBoxEmail_CheckedChanged);
             checkBoxPhone.CheckedChanged += new EventHandler(this.checkBoxPhone_CheckedChanged);
+            checkBoxAddress.CheckedChanged += new EventHandler(this.checkBoxAddress_CheckedChanged);
             checkBoxOther.CheckedChanged += new EventHandler(this.checkBoxOther_CheckedChanged);
             buttonLocateContacts.Click += new EventHandler(this.buttonLocateContacts_Click);
             buttonGetURLs.Click += new EventHandler(this.buttonGetURLs_Click);
@@ -126,7 +132,117 @@ namespace First_Webcrawler
 
         #region Windows Form Designer generated code
 
-        //                                                              Beginning of source url locating/gathering section
+
+        //                                                                               Beginning of GUI updating area
+        //****************************************************************************************************************************************************************************************
+
+        private void resetContactsSearchKeywordsArray()
+        {
+            //set all CONTACTS_PAGE_SEARCH_KEYWORDs to their "off" states
+            for (int i = 0; i < NUMBER_OF_CONTACT_PAGE_SEARCH_KEYWORDS; i++)
+                for (int j = 0; j < NUMBER_OF_CONTACT_PAGE_SEARCH_KEYWORDS; j++)
+                    CONTACTS_PAGE_SEARCH_KEYWORDS[i, j] = impossibleSearchPhrase;
+
+            //alter respective email search word entries
+            if (checkBoxEmailIsChecked)
+            {
+                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 0] = "Email";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 1] = "email";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 2] = "mailto:";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 3] = "@";
+            }
+
+            //alter respective phone search word entries
+            if (checkBoxPhoneIsChecked)
+            {
+                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 0] = "Phone";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 1] = "phone";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 2] = "tel:-";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 3] = "1(";
+            }
+
+            //alter respective address search word entries
+            if (checkBoxAddressIsChecked)
+            {
+                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 0] = "Address";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 1] = "address";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 2] = "Location";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 3] = "location";
+            }
+
+            //alter respective other search word entries
+            if (checkBoxOtherIsChecked)
+            {
+                //meeting location
+                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 0] = "meet";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 1] = "Ave";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 2] = "Rd";
+                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 3] = "Ln";
+            }
+
+            //print updated keyword arrays
+            Console.WriteLine("");
+            for (int i = 0; i < NUMBER_OF_CONTACT_PAGE_SEARCH_KEYWORDS; i++)
+            {
+                //if the first entry in a CONTACTS_PAGE_SEARCH_KEYWORDS array is the impossible frase, then it will just write to the console that that checkbox is unchecked
+                if (CONTACTS_PAGE_SEARCH_KEYWORDS[i, 0].Equals(impossibleSearchPhrase))
+                    Console.WriteLine("Checkbox number " + (i + 1) + " is unchecked." + "\n");
+                //if for whatever reason the list hasn't been updated yet, say so
+                else if (CONTACTS_PAGE_SEARCH_KEYWORDS[i, 0] == null)
+                    Console.WriteLine("Checkbox number " + (i + 1) + " is somehow not updated, or is broken." + "\n");
+                //otherwise the entry is considered to be checked
+                else
+                    Console.WriteLine("Checkbox number " + (i + 1) + " is checked." + "\n");
+            }
+        }
+
+        //Added contact search keyphrase changing functionality
+
+        private void checkBoxEmail_CheckedChanged(object sender, EventArgs e)
+        {
+            //reset the check state
+            checkBoxEmailIsChecked = checkBoxEmail.Checked;
+            //checkBoxEmail.Checked = !checkBoxEmail.Checked;
+
+            resetContactsSearchKeywordsArray();
+
+            Console.WriteLine("Changed CONTACTS_PAGE_SEARCH_KEYWORDS");
+        }
+
+        private void checkBoxPhone_CheckedChanged(object sender, EventArgs e)
+        {
+            //reset the check state
+            checkBoxPhoneIsChecked = checkBoxPhone.Checked;
+            //checkBoxPhone.Checked = !checkBoxPhone.Checked;
+
+            resetContactsSearchKeywordsArray();
+
+            Console.WriteLine("Changed CONTACTS_PAGE_SEARCH_KEYWORDS");
+        }
+
+        private void checkBoxAddress_CheckedChanged(object sender, EventArgs e)
+        {
+            //reset the check state
+            checkBoxAddressIsChecked = checkBoxAddress.Checked;
+            //checkBoxOther.Checked = !checkBoxOther.Checked;
+
+            resetContactsSearchKeywordsArray();
+
+            Console.WriteLine("Changed CONTACTS_PAGE_SEARCH_KEYWORDS");
+        }
+
+        private void checkBoxOther_CheckedChanged(object sender, EventArgs e)
+        {
+            //reset the check state
+            checkBoxOtherIsChecked = checkBoxOther.Checked;
+            //checkBoxOther.Checked = !checkBoxOther.Checked;
+
+            resetContactsSearchKeywordsArray();
+
+            Console.WriteLine("Changed CONTACTS_PAGE_SEARCH_KEYWORDS");
+        }
+
+        //                                                              End of GUI updating area, beginning of source url locating/gathering section
         //*****************************************************************************************************************************************************************************************
 
         private void buttonGetURLs_Click(object sender, EventArgs e)
@@ -141,8 +257,8 @@ namespace First_Webcrawler
             WorkSheet worksheet = workbook.GetWorkSheet(SHEET_NAME);
 
             int rowCount = NUMBER_OF_ENTRIES;
-            //start at row 2 to skip the first header
-            for (int i = 0; i < rowCount; i++)
+            //start at rowOffset to skip the header
+            for (int i = rowOffset; i < rowCount; i++)
             {
                 //get value by cell address
                 //string address_val = ws["A" + rowCount].ToString();
@@ -150,7 +266,10 @@ namespace First_Webcrawler
                 string index_val = worksheet.Rows[i].Columns[READING_COLUMN].ToString();
 
                 //read each cell's value to the array of URLs
-                URLs[i] = index_val;
+                URLs[i- rowOffset] = index_val;
+                //set the URL to an empty string if it's originally a null value
+                if (URLs[i] == null)
+                    URLs[i] = "";
 
                 //check to make sure correct values are collected
                 Console.WriteLine(i + "'{0}'", index_val);
@@ -166,11 +285,16 @@ namespace First_Webcrawler
 
         private void buttonLocateContacts_Click(object sender, EventArgs e)
         {
+            //make sure to instantiate the contact search keywords array if it's not already been instantiated by changing the check state of a checkbox
+            resetContactsSearchKeywordsArray();
+
             URLIndex = 0;
+            //loop through all the entries
             while (URLIndex < NUMBER_OF_ENTRIES)
             {
                 try
                 {
+                    //loop through all the entries
                     while (URLIndex < NUMBER_OF_ENTRIES)
                     {
                         string url = URLs[URLIndex];
@@ -265,7 +389,7 @@ namespace First_Webcrawler
                 //    URLIndex++;
                 //}
                 //catch the web exception and let user start again, starting at the next URL
-                catch (WebException ex)
+                catch (WebException)
                 {
                     Console.WriteLine("WebException caused by url being: " + contactURLs[URLIndex]);
                     contactURLs[URLIndex] = getURLFromHTML(-1, "", MAIN_PAGE_SEARCH_TAGS_START);
@@ -279,28 +403,36 @@ namespace First_Webcrawler
         {
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.UserAgent = "C# console client";
-
-                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                using (Stream stream = response.GetResponseStream())
-                using (StreamReader reader = new StreamReader(stream))
+                //make sure that the url provided isn't empty
+                if (url != null)
                 {
-                    return reader.ReadToEnd();  // can't do .ToLower(); because it ruins the urls, I've tested it
-                    /*
-                        maybe return 2 strings one of the standard and one of the .ToLower-ed html, so you can search the .ToLower-ed HTML
-                        and then go to that character in the unaltered html for the url?
-                        that's just for later on, when efficiency and not debugging is my main focus
-                     */
+                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                    request.UserAgent = "C# console client";
+
+                    using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                    using (Stream stream = response.GetResponseStream())
+                    using (StreamReader reader = new StreamReader(stream))
+                    {
+                        return reader.ReadToEnd();  // can't do .ToLower(); because it ruins the urls, I've tested it
+                        /*
+                            maybe return 2 strings one of the standard and one of the .ToLower-ed html, so you can search the .ToLower-ed HTML
+                            and then go to that character in the unaltered html for the url?
+                            that's just for later on, when efficiency and not debugging is my main focus
+                         */
+                    }
+                //if the url provided was null, just return an empty string
+                } else {
+                    Console.WriteLine("the url I was given was null");
+                    return "";
                 }
             }
-            catch (WebException ex)
+            catch (WebException)
             {
                 //if the URL is invalid, try googling the invalid url string maybe?
                 Console.WriteLine("couldn't resolve the site host name because the url is '" + url + "'");
                 return "";
             }
-            catch (NotSupportedException ex)
+            catch (NotSupportedException)
             {
                 //if the URL is invalid, try googling the invalid url string
 
@@ -309,7 +441,7 @@ namespace First_Webcrawler
 
                 return "";
             }
-            catch (UriFormatException ex)
+            catch (UriFormatException)
             {
                 Console.WriteLine("exception caused by url being '" + url + "'");
                 Console.WriteLine("");
@@ -325,10 +457,7 @@ namespace First_Webcrawler
                 for (int i = 0; i < links.Length; i++)
                     links[i] = "empty";
                 string foundURL = "";
-                string foundLink = "";
                 linkCounter = 0;
-                //try
-                //{
                 endOfBody = false;
                 //make sure the input is not empty
                 if (knownURLIndex < 0)
@@ -336,8 +465,10 @@ namespace First_Webcrawler
                     //print first few chars of HTML as indication of proper functioning
                     Console.WriteLine(html.Substring(0, 15));
 
-                    int i = 0;
+                    //for counting links
                     int l = 0;
+                    //index for finding the starting spot of each link
+                    int i = 0;
                     bool foundContact = false;
                     //read through html until it reaches the end of the body or finds the contact
                     while (!endOfBody && !foundContact && linkCounter < links.Length)
@@ -511,7 +642,7 @@ namespace First_Webcrawler
             //    URLIndex++;
             //}
             //catch the web exception and let user start again, starting at the next URL
-            catch (WebException ex)
+            catch (WebException)
             {
                 Console.WriteLine(URLIndex);
                 Console.WriteLine("WebException caused by URL being '" + contactURLs[URLIndex] + "'");
@@ -634,7 +765,7 @@ namespace First_Webcrawler
                     contactInfo[URLIndex, 2] = "Somehow there was no html at this URL";
                 }
             }
-            catch (UriFormatException ex)
+            catch (UriFormatException)
             {
                 //if the URL is invalid, try googling the invalid url string maybe?
                 Console.WriteLine("exception caused by url being '" + url + "'");
@@ -682,6 +813,7 @@ namespace First_Webcrawler
                                         while (k < link.Length - startIndex - 1)
                                         {
                                             //break at the closing " in the html, signifying the end of the HTML
+                                            //I'm leaving in the null test because I think the compiler gets mad at me when it's not there
                                             if (link[startIndex + k + 1] != null && link[startIndex + k + 1] == '"')
                                                 break;
                                             k++;
@@ -733,13 +865,16 @@ namespace First_Webcrawler
                         }
                         tempContact = "The contacts page url that I was going to return was not valid";
                     }
-                    //check if the contact url is a local link and convert it to a URL if it is
-                    if (contact.Substring(0, 1) == "/")
-                        tempContact = prepBaseURL(baseURL) + contact;
+
+                    //check if the contact url is a local link and convert it to a URL if it is, making sure to add a "/"
+                    //if (contact != "The contacts page url that I was going to return was not valid")
+                    //    tempContact = baseURL.Substring(0, baseURL.LastIndexOf("")) + tempContact;
+                    if (contact.LastIndexOf("/") == -1)
+                        return prepBaseURL(baseURL) + "/" + contact;
+                    else if (contact.Substring(0, 1) == "/")
+                        tempContact = prepBaseURL(baseURL);
                     else if (contact.Substring(0, 2) == "./")
                         tempContact = prepBaseURL(baseURL) + contact.Substring(1);
-                    else if (contact != "The contacts page url that I was going to return was not valid")
-                        tempContact = baseURL + tempContact;
                 }
 
                 contact = tempContact;
@@ -762,8 +897,21 @@ namespace First_Webcrawler
             if (baseURL.LastIndexOf("/") == -1 || baseURL.Substring(0, baseURL.LastIndexOf("/")+1).Equals("https://"))
                 //return the original, unchanged baseURL
                 return baseURL;
-            //otherwise, return only the first part of the URL 
-            return baseURL.Substring(0, baseURL.LastIndexOf("/"));
+
+
+            String newBaseURL = baseURL.Substring(0, baseURL.LastIndexOf("/"));
+
+            //otherwise, if the last bit on the url is actually a home page, remove that bit and return only the first part of the URL 
+            foreach (String homePageKeyword in URL_REMOVE_EXTENSIONS)
+                foreach (String extension in URL_REMOVE_EXTENSIONS)
+                    //if the end of the baseURL is a homepage URL tidbit with the "/"
+                    //the part where I did (newBaseURL.Length-1) was to get the last index of newBaseURL
+                    if (newBaseURL.Substring((newBaseURL.Length-1) - (homePageKeyword + extension + 1).Length).Equals(homePageKeyword + extension + "/"))
+                        //set the newBaseURL to the baseURL without that homepage bit
+                        newBaseURL = newBaseURL.Substring(0, (newBaseURL.Length - 1) - (homePageKeyword + extension + 1).Length);
+                    //no need to check for URLs that have the home page stuff withOUT the "/" at the end because they're gotten rid of near the top of this method, where newBaseURL is instantiated
+
+            return newBaseURL;
         }
 
         private static String parseContactWithKeywordLocation(String html, String keyword, int indexInHTML)
@@ -987,23 +1135,24 @@ namespace First_Webcrawler
             WorkSheet worksheet = workbook.GetWorkSheet(SHEET_NAME);
 
             int rowCount = NUMBER_OF_ENTRIES;
-            //start at row 2 to skip the first header
-            for (int i = 2; i < rowCount; i++)
+            int offset = rowOffset + 1;
+            //start at rowOffset + 1 to skip the first header
+            for (int i = offset; i < rowCount; i++)
             {
                 //check to make sure correct values for correct column are written
-                Console.WriteLine(i-2);
+                Console.WriteLine(i - offset);
 
                 //set value by cell address
                 //set value by row and column indexing
-                worksheet[MAIN_URL_WRITING_COLUMN + i].Value = URLs[i - 2];
-                Console.WriteLine(URLs[i - 2]);
-                worksheet[CONTACT_URL_WRITING_COLUMN + i].Value = contactURLs[i - 2];
-                Console.WriteLine(contactURLs[i - 2]);
+                worksheet[MAIN_URL_WRITING_COLUMN + i].Value = URLs[i - offset];
+                Console.WriteLine(URLs[i - offset]);
+                worksheet[CONTACT_URL_WRITING_COLUMN + i].Value = contactURLs[i - offset];
+                Console.WriteLine(contactURLs[i - offset]);
                 //only write information if it's selected in the GUI
                 if (checkBoxEmailIsChecked)
                 {
-                    worksheet[EMAIL_WRITING_COLUMN + i].Value = contactInfo[i - 2, 0];
-                    Console.WriteLine(contactInfo[i - 2, 0]);
+                    worksheet[EMAIL_WRITING_COLUMN + i].Value = contactInfo[i - offset, 0];
+                    Console.WriteLine(contactInfo[i - offset, 0]);
                 }
                 else
                 {
@@ -1011,8 +1160,8 @@ namespace First_Webcrawler
                 }
                 if (checkBoxPhoneIsChecked)
                 {
-                    worksheet[PHONE_WRITING_COLUMN + i].Value = contactInfo[i - 2, 1];
-                    Console.WriteLine(contactInfo[i - 2, 1]);
+                    worksheet[PHONE_WRITING_COLUMN + i].Value = contactInfo[i - offset, 1];
+                    Console.WriteLine(contactInfo[i - offset, 1]);
                 }
                 else
                 {
@@ -1020,8 +1169,8 @@ namespace First_Webcrawler
                 }
                 if (checkBoxAddressIsChecked)
                 {
-                    worksheet[ADDRESS_WRITING_COLUMN + i].Value = contactInfo[i - 2, 2];
-                    Console.WriteLine(contactInfo[i - 2, 2]);
+                    worksheet[ADDRESS_WRITING_COLUMN + i].Value = contactInfo[i - offset, 2];
+                    Console.WriteLine(contactInfo[i - offset, 2]);
                 }
                 else
                 {
@@ -1029,8 +1178,8 @@ namespace First_Webcrawler
                 }
                 if (checkBoxOtherIsChecked)
                 {
-                    worksheet[MEETING_LOCATION_WRITING_COLUMN + i].Value = contactInfo[i - 2, 2];
-                    Console.WriteLine(contactInfo[i - 2, 2]);
+                    worksheet[MEETING_LOCATION_WRITING_COLUMN + i].Value = contactInfo[i - offset, 2];
+                    Console.WriteLine(contactInfo[i - offset, 2]);
                 }
                 else
                 {
@@ -1045,153 +1194,7 @@ namespace First_Webcrawler
             Console.WriteLine("Finished writing contact information to workbook.");
         }
 
-        private void resetContactsSearchKeywordsArray()
-        {
-            //alter respective email search word entries
-            if (checkBoxEmailIsChecked)
-            {
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 0] = "president";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 1] = "Email";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 2] = "email";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 3] = "mailto:";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 4] = "{at}";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 5] = "@";
-            }
-            else
-            {
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 0] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 1] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 2] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 3] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 4] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[0, 5] = impossibleSearchPhrase;
-            }
-            Console.WriteLine("");
-            //CONTACTS_PAGE_SEARCH_KEYWORDS has arrays of length 6
-            for (int i = 0; i < 6; i++)
-                Console.WriteLine(CONTACTS_PAGE_SEARCH_KEYWORDS[0, i]);
-
-            //alter respective phone search word entries
-            if (checkBoxPhoneIsChecked)
-            {
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 0] = "PHONE";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 1] = "Phone";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 2] = "phone";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 3] = "tel:-";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 4] = "-";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 5] = "-";
-            }
-            else
-            {
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 0] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 1] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 2] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 3] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 4] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[1, 5] = impossibleSearchPhrase;
-            }
-            Console.WriteLine("");
-            //CONTACTS_PAGE_SEARCH_KEYWORDS has arrays of length 6
-            for (int i = 0; i < 6; i++)
-                Console.WriteLine(CONTACTS_PAGE_SEARCH_KEYWORDS[1, i]);
-
-            //alter respective address search word entries
-            if (checkBoxAddressIsChecked)
-            {
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 0] = "Address";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 1] = "address";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 2] = "at";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 3] = "Ave";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 4] = "Rd";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 5] = "address:";
-            }
-            else
-            {
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 0] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 1] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 2] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 3] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 4] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[2, 5] = impossibleSearchPhrase;
-            }
-            Console.WriteLine("");
-            //CONTACTS_PAGE_SEARCH_KEYWORDS has arrays of length 6
-            for (int i = 0; i < 6; i++)
-                Console.WriteLine(CONTACTS_PAGE_SEARCH_KEYWORDS[2, i]);
-
-            //alter respective other search word entries
-            if (checkBoxOtherIsChecked)
-            {
-                //meeting location
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 0] = "Location";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 1] = "meet";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 2] = "location";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 3] = "Ave";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 4] = "Rd";
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 5] = "Ln";
-            }
-            else
-            {
-                //meeting location
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 0] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 1] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 2] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 3] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 4] = impossibleSearchPhrase;
-                CONTACTS_PAGE_SEARCH_KEYWORDS[3, 5] = impossibleSearchPhrase;
-            }
-            Console.WriteLine("");
-            //CONTACTS_PAGE_SEARCH_KEYWORDS has arrays of length 6
-            for (int i = 0; i < 6; i++)
-                Console.WriteLine(CONTACTS_PAGE_SEARCH_KEYWORDS[3, i]);
-            Console.WriteLine("");
-        }
-
-        //Added contact search keyphrase changing functionality
-
-        private void checkBoxEmail_CheckedChanged(object sender, EventArgs e)
-        {
-            //reset the check state
-            checkBoxEmailIsChecked = checkBoxEmail.Checked;
-            //checkBoxEmail.Checked = !checkBoxEmail.Checked;
-
-            resetContactsSearchKeywordsArray();
-
-            Console.WriteLine("Changed CONTACTS_PAGE_SEARCH_KEYWORDS");
-        }
-
-        private void checkBoxPhone_CheckedChanged(object sender, EventArgs e)
-        {
-            //reset the check state
-            checkBoxPhoneIsChecked = checkBoxPhone.Checked;
-            //checkBoxPhone.Checked = !checkBoxPhone.Checked;
-
-            resetContactsSearchKeywordsArray();
-
-            Console.WriteLine("Changed CONTACTS_PAGE_SEARCH_KEYWORDS");
-        }
-
-        private void checkBoxAddress_CheckedChanged(object sender, EventArgs e)
-        {
-            //reset the check state
-            checkBoxAddressIsChecked = checkBoxAddress.Checked;
-            //checkBoxOther.Checked = !checkBoxOther.Checked;
-
-            resetContactsSearchKeywordsArray();
-
-            Console.WriteLine("Changed CONTACTS_PAGE_SEARCH_KEYWORDS");
-        }
-
-        private void checkBoxOther_CheckedChanged(object sender, EventArgs e)
-        {
-            //reset the check state
-            checkBoxOtherIsChecked = checkBoxOther.Checked;
-            //checkBoxOther.Checked = !checkBoxOther.Checked;
-
-            resetContactsSearchKeywordsArray();
-
-            Console.WriteLine("Changed CONTACTS_PAGE_SEARCH_KEYWORDS");
-        }
+        //End of code
 
         #endregion
 
