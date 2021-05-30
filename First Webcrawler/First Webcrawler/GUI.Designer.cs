@@ -32,7 +32,7 @@ namespace First_Webcrawler
     {
         //                                                                  File Reading Class Variables
         //Row counting vars
-        public static int NUMBER_OF_ENTRIES = 20;
+        public static int NUMBER_OF_ENTRIES = 10;
         //default offset should be 1, for headers
         public static int rowOffset = 35;
         //set URLIndex to rowOffset so that's where it starts
@@ -66,8 +66,6 @@ namespace First_Webcrawler
         public static string[] URLs = new String[NUMBER_OF_ENTRIES]; //UKURLs; //
 
         //Contact URL vars
-        public static String[] links = new string[10000];
-        public static int linkCounter = 0;
         public static string[] contactURLs = new String[NUMBER_OF_ENTRIES];
         //when you inevitably increase the number of things in the array below, you'll have to make the one below it a 2D array and alter lines 137-145 to allow subsequent known URLs
         public static string[] KNOWN_CONTACT_URLS = { "https://sinwp.com/", "https://www.facebook.com/" };
@@ -317,11 +315,6 @@ namespace First_Webcrawler
 
         private void buttonGetURLs_Click(object sender, EventArgs e)
         {
-            //initialize links list
-            //this is not the cause of the null value exceptions
-            for (int i = 0; i < links.Length; i++)
-                links[i] = "empty";
-
             //read the URLs from the excel doc to an array of strings
             WorkBook workbook = WorkBook.Load(PATH_OF_IO_DOC);
             WorkSheet worksheet = workbook.GetWorkSheet(SHEET_NAME);
@@ -385,10 +378,10 @@ namespace First_Webcrawler
                                 Console.WriteLine("Oooh! I know this site!");
                                 Console.WriteLine("Source URL = " + URLs[URLIndex]);
                                 //set the URL at the current spot to that found at the known weppage
-                                URLs[URLIndex] = getURLFromHTML(0, html, urlSearchPhrases);
+                                URLs[URLIndex] = getURLFromHTML(html, urlSearchPhrases);
                                 Console.WriteLine("Main page URL = " + URLs[URLIndex]);
                                 //set the contacts page URL to the one found in the new webpage's HTML
-                                contactURLs[URLIndex] = getURLFromHTML(-1, getHTML(URLs[URLIndex]), MAIN_PAGE_SEARCH_TAGS_START);
+                                contactURLs[URLIndex] = getURLFromHTML(getHTML(URLs[URLIndex]), MAIN_PAGE_SEARCH_TAGS_START);
                                 Console.WriteLine("Contact page URL = " + contactURLs[URLIndex]);
 
                                 Console.WriteLine("");
@@ -425,7 +418,7 @@ namespace First_Webcrawler
                                 //since it's an unknown, and thus, assumed to be the main page of the club, searching for the URL isn't necessary, as we already have it
                                 Console.WriteLine("Main page URL = " + URLs[URLIndex]);
                                 //set the contacts page URL to the one found in the new webpage's HTML
-                                contactURLs[URLIndex] = getURLFromHTML(-1, html, MAIN_PAGE_SEARCH_TAGS_START);
+                                contactURLs[URLIndex] = getURLFromHTML(html, MAIN_PAGE_SEARCH_TAGS_START);
                                 Console.WriteLine("Contact page URL = " + contactURLs[URLIndex]);
 
                                 Console.WriteLine("");
@@ -461,7 +454,7 @@ namespace First_Webcrawler
                 catch (WebException)
                 {
                     Console.WriteLine("WebException caused by url being: " + contactURLs[URLIndex]);
-                    contactURLs[URLIndex] = getURLFromHTML(-1, "", MAIN_PAGE_SEARCH_TAGS_START);
+                    contactURLs[URLIndex] = getURLFromHTML("", MAIN_PAGE_SEARCH_TAGS_START);
                     URLIndex++;
                     Console.WriteLine("");
                 }
@@ -519,158 +512,105 @@ namespace First_Webcrawler
             }
         }
 
-        private static string getURLFromHTML(int knownURLIndex, string html, String[] searchKeywords)
+        private static string getURLFromHTML(string html, string[] searchTagsStart)
         {
+            string[] links = getHTMLSegments(html, searchTagsStart, MAIN_PAGE_SEARCH_TAGS_END);
+
+            Console.WriteLine("Found " + links.Length + " links");
+            Console.WriteLine("first 3 values of links array:");
+            Console.WriteLine(links[0] + ", " + links[1] + ", " + links[2]);
+
+            string foundURL = parseItemFromList(LINK_SEARCH_KEYWORDS, CONTACT_URL_PARSING_KEYWORDS, links);
+
+            //Reset endOfBody so that other methods can reuse the variable
+            endOfBody = false;
+
+            //return the url
+            return foundURL;
+            //}
+            //catch (ArgumentOutOfRangeException ex)
+            //{
+            //    Console.WriteLine("Looked for keyphrases outside of html for some reason.");
+            //    Console.WriteLine(ex);
+            //    Console.WriteLine("");
+
+            //    //return the url
+            //    return foundURL;
+            //}
+        }
+
+
+        //Note: You can't break search for contacts from html SEGMENTS because contact info isn't virtually always contained in an "a" tag or a "button" tag like contact page urls are
+        public static string[] getHTMLSegments (string html, String[] searchTagsStart, String[] searchTagsEnd)
+        {
+            //initialize a string array of empty strings
+            string[] segments = new string[10000];
+            //initialize segments list
+            for (int i = 0; i < segments.Length; i++)
+                segments[i] = "empty";
+
             if (html.Length > 0)
             {
-                for (int i = 0; i < links.Length; i++)
-                    links[i] = "empty";
-                string foundURL = "";
-                linkCounter = 0;
-                endOfBody = false;
-                //make sure the input is not empty
-                if (knownURLIndex < 0)
-                {
-                    //print first few chars of HTML as indication of proper functioning
-                    Console.WriteLine(html.Substring(0, 15));
-
-                    //for counting links
-                    int l = 0;
-                    //index for finding the starting spot of each link
-                    int i = 0;
-                    bool foundContact = false;
-                    //read through html until it reaches the end of the body or finds the contact
-                    while (!endOfBody && !foundContact && linkCounter < links.Length)
-                    {
-                        //read through all of the search keywords
-                        for (int j = 0; j < MAIN_PAGE_SEARCH_TAGS_END.Length; j++)
-                        {
-                            //makes a list (links array) of <a> blocks (<a> and <button> blocks) to go through and store them in the links array
-                            //if the site's HTML includes the keywords somewhere, look nearby it for the URL of the contacts page
-                            if (j < searchKeywords.Length && i < html.Length-searchKeywords[j].Length && html.Substring(i, searchKeywords[j].Length) == (searchKeywords[j]))
-                            {
-                                //i is the starting spot of each link and k is the ending spot
-
-                                //find the <a> and <button> blocks
-                                //look through subsequent html for closing <a> tag, and when it's found, set k to it
-                                int k = i;
-                                while (j < MAIN_PAGE_SEARCH_TAGS_END.Length && html.Substring(k, MAIN_PAGE_SEARCH_TAGS_END[j].Length) != (MAIN_PAGE_SEARCH_TAGS_END[j]))
-                                    k++;
-
-                                //add another link as an entry to the array of links to go through
-                                //this is not the cause of null value exceptions either
-                                if (html.Substring(i, k - i) != null && html.Substring(i, k - i) != "")
-                                    links[linkCounter] = html.Substring(i, k - i);
-                                linkCounter++;
-
-                                //debugging
-                                l++;
-                                //Console.WriteLine("Found a link at character #" + i);
-                                //if (i - CONTACT_SEGMENT_SIZE >= 0)
-                                //    Console.WriteLine(html.Substring(i - CONTACT_SEGMENT_SIZE, 2 * CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
-                                //else
-                                //    Console.WriteLine(html.Substring(0, CONTACT_SEGMENT_SIZE + searchKeywords[j].Length));
-                            }
-                            //move on to the next HTML once it's finished reading through this HTML
-                            if ((i < html.Length-7 && html.Substring(i, 7) == ("</body>")) || i == html.Length-1)
-                            {
-                                endOfBody = true;
-                                break;
-                            }
-                        }
-
-                        i++;
-                    }
-                    
-                    Console.WriteLine("Found " + l + " links");
-                    Console.WriteLine("first 3 values of links array:");
-                    Console.WriteLine(links[0] + ", " + links[1] + ", " + links[2]);
-
-                    foundURL = parseItemFromList(LINK_SEARCH_KEYWORDS, CONTACT_URL_PARSING_KEYWORDS, links);
-                    //it turns out that .Substring() in C# is not the same as .substring() in Java
-                }
-                //basically copy+paste with slight modifications for other known URL indices
-                else if (knownURLIndex == 0)
-                {
-                    //print first few chars of HTML as indication of proper functioning
-                    Console.WriteLine(html.Substring(0, 15 + 20));
-
-                    bool foundContact = false;
-                    int startIndex = 0;
-                    int endIndex = 0;
-                    int i = 0;
-                    //read through html until it finds the right keyword
-                    while (!endOfBody && !foundContact && linkCounter < links.Length)
-                    {
-                        //read through all of MAIN_PAGE_SEARCH_KEYWORDS
-                        for (int j = 0; j < searchKeywords.Length; j++)
-                        {
-                            //look through nearby html for contacts page URL then set foundURL to that string
-                            startIndex = i + searchKeywords[j].Length + 1;
-                            //if the site's HTML includes the keywords somewhere, look nearby it for the URL of the contacts page
-                            if (searchKeywords[j].Length + i < html.Length && html.Substring(i, searchKeywords[j].Length) == (searchKeywords[j]))
-                            {
-                                int k = 0;
-                                while (k < 500)
-                                {
-                                    //break at the closing " in the html, signifying the end of the HTML
-                                    if (html[startIndex + k + 1] == '"')
-                                        break;
-                                    k++;
-                                }
-                                endIndex = startIndex + k + 1;
-
-                                foundURL = html.Substring(startIndex, endIndex - startIndex);
-                                
-                                foundContact = true;
-                                break;
-                            }
-                            //move on to the next HTML once it's finished reading through this HTML
-                            if (html.Substring(i, 6) == ("</body"))
-                            {
-                                endOfBody = true;
-                                break;
-                            }
-                        }
-
-                        i++;
-                    }
-                }
-                //else if (knownURLIndex == 1)
-                //{
-                //    //check this page: http://www.n4c.us/camera_clubs.htm for the desired club
-                //    //if it isn't there, try googling the club, and if that fails do the next comment
-                //    //set all contact info to that available on this page: http://www.n4c.us/contact_us.htm
-
-                //}
-                else
-                {
-
-                    Console.WriteLine(URLIndex + rowOffset);
-                    Console.WriteLine("This function was either misused or has a critical logic bug, it's probably the former");
-                    Console.WriteLine("");
-                }
-
-                //Reset endOfBody so that other methods can reuse the variable
+                int segmentCounter = 0;
                 endOfBody = false;
 
-                //return the url
-                return foundURL;
-                //}
-                //catch (ArgumentOutOfRangeException ex)
-                //{
-                //    Console.WriteLine("Looked for keyphrases outside of html for some reason.");
-                //    Console.WriteLine(ex);
-                //    Console.WriteLine("");
+                //print first few chars of HTML as indication of proper functioning
+                Console.WriteLine(html.Substring(0, 15));
 
-                //    //return the url
-                //    return foundURL;
-                //}
+                //for counting segments
+                int l = 0;
+                //index for finding the starting spot of each link
+                int i = 0;
+                bool foundContact = false;
+                //read through html until it reaches the end of the body or finds the contact
+                while (!endOfBody && !foundContact && segmentCounter < segments.Length)
+                {
+                    //read through all of the search keywords
+                    for (int j = 0; j < MAIN_PAGE_SEARCH_TAGS_END.Length; j++)
+                    {
+                        //makes a list (segments array) of <a> blocks (<a> and <button> blocks) to go through and store them in the segments array
+                        //if the site's HTML includes the keywords somewhere, look nearby it for the URL of the contacts page
+                        if (j < searchTagsStart.Length && i < html.Length - searchTagsStart[j].Length && html.Substring(i, searchTagsStart[j].Length) == (searchTagsStart[j]))
+                        {
+                            //i is the starting spot of each link and k is the ending spot
+
+                            //find the <a> and <button> blocks
+                            //look through subsequent html for closing <a> tag, and when it's found, set k to it
+                            int k = i;
+                            while (j < MAIN_PAGE_SEARCH_TAGS_END.Length && html.Substring(k, MAIN_PAGE_SEARCH_TAGS_END[j].Length) != (MAIN_PAGE_SEARCH_TAGS_END[j]))
+                                k++;
+
+                            //add another link as an entry to the array of segments to go through
+                            //this is not the cause of null value exceptions either
+                            if (html.Substring(i, k - i) != null && html.Substring(i, k - i) != "")
+                                segments[segmentCounter] = html.Substring(i, k - i);
+                            segmentCounter++;
+
+                            //debugging
+                            l++;
+                            //Console.WriteLine("Found a link at character #" + i);
+                            //if (i - CONTACT_SEGMENT_SIZE >= 0)
+                            //    Console.WriteLine(html.Substring(i - CONTACT_SEGMENT_SIZE, 2 * CONTACT_SEGMENT_SIZE + searchTagsStart[j].Length));
+                            //else
+                            //    Console.WriteLine(html.Substring(0, CONTACT_SEGMENT_SIZE + searchTagsStart[j].Length));
+                        }
+
+                        //move on to the next HTML once it's finished reading through this HTML
+                        if ((i < html.Length - 7 && html.Substring(i, 7) == ("</body>")) || i == html.Length - 1)
+                        {
+                            endOfBody = true;
+                            break;
+                        }
+                    }
+
+                    i++;
+                }
+                return segments;
             }
             else
             {
                 Console.WriteLine("Somehow there was no html at this URL");
-                return "Somehow there was no html at this URL";
+                return segments;
             }
         }
 
@@ -727,6 +667,7 @@ namespace First_Webcrawler
             }
         }
 
+        //Note: You can't break search for contacts from html SEGMENTS because contact info isn't virtually always contained in an "a" tag or a "button" tag like contact page urls are
         private static void getContactsFromURL(string url)
         {
             try
@@ -776,6 +717,8 @@ namespace First_Webcrawler
                                         String contact = "No " + CONTACTS_PAGE_SEARCH_KEYWORDS[j, 0].ToUpper() + " found";
 
                                         //maybe modify contact text in case extra text further is included in parsing
+                                        //**********************************************************************************************************                   CONTINUE HERE (SEE BELOW STATEMENT FOR FURTHER GUIDANCE)
+                                        //needs to find ALL possible contact information, not just one, then decide which one is the most likely contact info.
                                         contact = parseContactWithKeywordLocation(html, CONTACTS_PAGE_SEARCH_KEYWORDS[j, k], i);
                                         contactInfo[URLIndex, j] = contact;
 
@@ -857,6 +800,7 @@ namespace First_Webcrawler
             }
 }
 
+        //Note: You can't break search for contacts from html SEGMENTS because contact info isn't virtually always contained in an "a" tag or a "button" tag like contact page urls are
         private static String parseItemFromList(String [] itemSearchKeywords, String[] parsingKeyWords, String [] listItems)
         {
             try {
@@ -876,15 +820,11 @@ namespace First_Webcrawler
                     if (listItem == null)
                         listItem = "";
 
-                    //loop through each listItem, checking if it has one of the search words
-                    for (int l = 0; l < listItem.Length; l++)
-                    {
                         for (int q = 0; q < itemSearchKeywords.Length; q++)
                         {
-                            //if the searched phrase is within the listItem string and the searched phrase is equal to the phrase found (.ToLower() to speed up logic)
-                            //is it possible for the searched keyword to be in the listItem?
-                            //is the substring.Lower at character l equal to the keyword?
-                            if (l + itemSearchKeywords[q].Length < listItem.Length && listItem.Substring(l, itemSearchKeywords[q].Length).ToLower() == itemSearchKeywords[q])
+
+                            //if the searched phrase is within the listItem string (.ToLower to speed up search)
+                            if (listItem.ToLower().LastIndexOf(itemSearchKeywords[q]) > 0)
                             {
                                 //look for first listItem tag by going through detected html backwards
                                 for (int j = listItem.Length - 5 - 1; j >= 0; j--)
@@ -922,7 +862,6 @@ namespace First_Webcrawler
                         }
                         if (doBreakception)
                             break;
-                    }
                 }
 
                 string tempItem = item;
@@ -989,47 +928,99 @@ namespace First_Webcrawler
             return newBaseURL;
         }
 
-        private static String parseContactWithKeywordLocation(String html, String keyword, int keywordIndexInHTML)
+        private static String parseContactWithKeywordLocation(String html, String keyword, int keywordIndexInHTML )
         {
-            char[] parsingChars = { ' ', '<' };
-            char character;
+            //reset the class variable so no old values carry over
+            string [] contactSegments = new string[10000];
+
+            String[] parsingPhrasesStart = { " ", "mailto:", ">" };
+            String[] parsingPhrasesEnd = { "</", "< /", "?subject=" };
             ////offset so that the contact info. text phrase starts on the right word/phrase
             //int offset = 4;
-            int contactStartIndex = -1;
+            int contactIndexStart = keywordIndexInHTML + keyword.Length + 1;
+            int contactIndexEnd = -1;
+            Boolean doBreakception = false;
 
-            //go through all characters in html after the keyword
-            for (int i = keywordIndexInHTML + keyword.Length; i < html.Length; i++)
-            {
-                //update character value
-                character = html[i];
+            //keyword location
+            //A type 1 statistical error in this case would be less severe than a type 2, as we'd still get the contact info if it were unclear whether or not the keyword was in the contact info
+            Boolean keywordAtStartOfContact = false;
+            //determine if the keyword is at the start of the contact info, by determining if the character before the keyword is empty or not
+            //(primitive, I know, but it should be good enough for now at least)
+            //if the character before the keywordIndexInHTML is empty, we assert that the scraper is starting at the start of the contact info
+            if (html[keywordIndexInHTML-1].Equals(" "))
+                keywordAtStartOfContact = true;
 
-                //any starting index exceptions
-                //exception for keyword "$" [0, 0]
-                if (keyword.Equals("$"))
-                    //set the start index to the index of the keyword, since that's how it should be formatted (+0 so memory location definitions aren't changed)
-                    contactStartIndex = keywordIndexInHTML + 0;
-
-                //go through every possible parsing character to determine if the start of the contact info has been found
-                foreach (char parsingChar in parsingChars)
+            doBreakception = false;
+            //go through all start parsing phrases to find the contact info start index, if the keyword is in the middle of the contact info (ex: example@domain.com)
+            if (!keywordAtStartOfContact)
+                //go through all start parsing phrases to determine if the end of the contact info has been found
+                foreach (String startParsingPhrase in parsingPhrasesStart)
                 {
-                    //if the character at index i is equal to one of the parsing characters from list
-                    if (character.Equals(parsingChar))
+                    //go through all characters in html before the keyword
+                    int i = keywordIndexInHTML;
+                    while ( i > keyword.Length)
                     {
-                        //if the start index hasn't been found yet
-                        if (contactStartIndex == -1)
-                            //set the start index to the index after the current character (the current character is the parsing character)
-                            contactStartIndex = i + 1;
-                        //if the start index has been found
-                        else if (contactStartIndex != -1)
+                        //any starting index exceptions
+                        ////exception for keyword "$" [0, 0]
+                        //if (keyword.Equals("$"))
+                        //    //set the start index to the index of the keyword, since that's how it should be formatted (+0 so memory location definitions aren't changed)
+                        //    contactStartIndex = keywordIndexInHTML + 0;
+
+                        //if the character at index i is equal to one of the parsing phrases from list (.ToLower() to speed up search)
+                        if (html.ToLower().Substring(i, startParsingPhrase.Length).Equals(startParsingPhrase))
                         {
-                            Console.WriteLine("contact gathered was: " + html.Substring(contactStartIndex -1, 10));
-                            return html.Substring(contactStartIndex, i - contactStartIndex);
+                            //set the end index to the index after the current character (the current character is the parsing character)
+                            contactIndexStart = i;
+                            doBreakception = true;
+                            break;
                         }
+
+                        i--;
+                    }
+
+                    if (doBreakception)
+                        break;
+                }
+
+            doBreakception = false;
+            //go through all end parsing phrases to find the contact info end index
+            foreach (String endParsingPhrase in parsingPhrasesEnd)
+            {
+                //go through all characters in html after the keyword
+                for (int i = keywordIndexInHTML + keyword.Length; i < html.Length - endParsingPhrase.Length; i++)
+                {
+                    //any ending index exceptions
+                    ////exception for keyword "$" [0, 0]
+                    //if (keyword.Equals("$"))
+                    //    //set the start index to the index of the keyword, since that's how it should be formatted (+0 so memory location definitions aren't changed)
+                    //    contactStartIndex = keywordIndexInHTML + 0;
+
+                    //if the phrase at index i is equal to one of the parsing phrases from list (.ToLower() to speed up search)
+                    if (html.ToLower().Substring(i, endParsingPhrase.Length).Equals(endParsingPhrase))
+                    {
+                        //set the end index to the index after the current character (the current character is the parsing character)
+                        contactIndexEnd = i;
+                        doBreakception = true;
+                        break;
                     }
                 }
 
+                if (doBreakception)
+                    break;
             }
 
+            //return the contact info
+            //Note: there was an issue where the previous code would get a good string, but for whatever reason contactIndexEnd < contactIndexStart
+            //&& contactIndexEnd > contactIndexStart
+            if (contactIndexEnd > 0 )
+            {
+                Console.WriteLine("Character at contactIndexStart (" + contactIndexStart + "): " + html[contactIndexStart]);
+                Console.WriteLine("Character at contactIndexStart (" + contactIndexEnd + "): " + html[contactIndexEnd]);
+                Console.WriteLine("");
+                return html.Substring(contactIndexStart, contactIndexEnd - contactIndexStart);
+            }
+
+            //if it couldn't find an end index
             return "Couldn't parse the text after the contact information keyword.";
         }
 
@@ -1037,7 +1028,7 @@ namespace First_Webcrawler
         {
             String[] searchKeywords = { "https://www.facebook.com/" };
             string html = getHTML(url);
-            string foundURL = getURLFromHTML(-1, html, searchKeywords);
+            string foundURL = getURLFromHTML(html, searchKeywords);
 
             return foundURL;
         }
@@ -1106,7 +1097,7 @@ namespace First_Webcrawler
                 String[] searchKeywords = { clubGooglePhrase };
                 string html = getHTML(url);
                 string foundURL = "";
-                getURLFromHTML(-1, html, searchKeywords);
+                getURLFromHTML(html, searchKeywords);
 
                 return foundURL;
             }
@@ -1140,7 +1131,7 @@ namespace First_Webcrawler
                 String[] searchKeywords = { };
                 string html = getHTML(url);
                 string foundURL = "";
-                getURLFromHTML(-1, html, searchKeywords);
+                getURLFromHTML(html, searchKeywords);
 
                 return foundURL;
             }
