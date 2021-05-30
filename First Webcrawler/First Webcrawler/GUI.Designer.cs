@@ -14,7 +14,7 @@ using System.IO;
 /*
  * Agenda:
  * **************************************************************************************************************************************************
- * Do this for the workshops list before all others --> The parseContactWithKeywordLocation method needs some code to find parsing characters before starting index so as to get entirety of contact in case it starts in the middle of the contact
+ * Do this for the workshops list before all others --> The parseContactWithKeywordLocation method needs to parse the correct info, not necessarily the first contact info. Maybe do this by implementing a refactored version of link collection and scanning method?
  * For some reason about pages are still being prioritized by the crawler over contact pages in either the link analysis section or the brute force section (maybe  it's finding about link before contact link on main page?)
  * The lower methods need corrections so that the webcrawler only collects the info corresponding to the selections in the GUI
  * If a source URL is empty, the crawler should just ignore it, not spend like 20 seconds "thinking about it"
@@ -76,6 +76,7 @@ namespace First_Webcrawler
         //all lowercase to expedite searches
         public static String[] LINK_SEARCH_KEYWORDS = { "contact", "about", "meet", "board", "coordinators" };
         public static string[] KNOWN_CONTACT_URLS_LOCATOR_KEYPHRASES = { "web address:- <a href=", "" };
+        public static string[] CONTACT_URL_PARSING_KEYWORDS = { "href=", "src=" };
 
         //For dictionary guessing contact page URLs or going to local URLs
         //if the website's link goes to something including one of the following phrases(paired with an extension from the URL_TYPE_EXTENSIONS list), just remove it and then brute force the contact URL with the following extension words/phrases
@@ -585,7 +586,7 @@ namespace First_Webcrawler
                     Console.WriteLine("first 3 values of links array:");
                     Console.WriteLine(links[0] + ", " + links[1] + ", " + links[2]);
 
-                    foundURL = parseContactURLFromLinks();
+                    foundURL = parseItemFromList(LINK_SEARCH_KEYWORDS, CONTACT_URL_PARSING_KEYWORDS, links);
                     //it turns out that .Substring() in C# is not the same as .substring() in Java
                 }
                 //basically copy+paste with slight modifications for other known URL indices
@@ -650,6 +651,9 @@ namespace First_Webcrawler
                     Console.WriteLine("");
                 }
 
+                //Reset endOfBody so that other methods can reuse the variable
+                endOfBody = false;
+
                 //return the url
                 return foundURL;
                 //}
@@ -679,6 +683,12 @@ namespace First_Webcrawler
             //basically the same as buttonLocateContacts_Click(), but it stores the contact data collected
             try
             {
+                //Reset URLIndex so that the while loop isn't just immediately skipped because URLIndex == NUMBER_OF_ENTRIES at the start of this method
+                URLIndex = 0;
+                //Reset endOfBody so that other methods can reuse the variable (maybe unnecessary at the beginning of this method, but you can never be too sure)
+                endOfBody = false;
+
+
                 while (URLIndex < NUMBER_OF_ENTRIES)
                 {
                     Console.WriteLine("");
@@ -719,18 +729,21 @@ namespace First_Webcrawler
 
         private static void getContactsFromURL(string url)
         {
-            try {
+            try
+            {
+                //Reset endOfBody so that other methods can reuse the variable (maybe unnecessary at the beginning of this method, but you can never be too sure)
+                endOfBody = false;
+
                 //make sure the url is not empty
                 if (url != "")
                 {
                     string html = getHTML(url);
                     //all lowercase for searching porpoises
                     string lowercaseHTML = html.ToLower();
+
                     //make sure the input is not empty
                     if (html != "")
                     {
-                        //Show the webpage currently being read (for some reason it only displays 1)
-                        Console.WriteLine(URLIndex + rowOffset);
                         //print first 4 chars of HTML as indication of proper functioning
                         Console.WriteLine(html.Substring(0, 15));
 
@@ -832,6 +845,10 @@ namespace First_Webcrawler
                     //other
                     contactInfo[URLIndex, 2] = "Somehow there was no html at this URL";
                 }
+
+                //Reset endOfBody so that other methods can reuse the variable
+                endOfBody = false;
+
             }
             catch (UriFormatException)
             {
@@ -840,74 +857,64 @@ namespace First_Webcrawler
             }
 }
 
-        private static String parseContactURLFromLinks()
+        private static String parseItemFromList(String [] itemSearchKeywords, String[] parsingKeyWords, String [] listItems)
         {
             try {
-                String contact = "";
+                String item = "";
                 int startIndex = 0;
                 int endIndex = 0;
-                String link = "";
+                String listItem = "";
                 Boolean doBreakception = false;
 
-                //loop through all links accumulated
-                for (int i = 0; i < links.Length; i++)
+                //loop through all listItems accumulated
+                for (int i = 0; i < listItems.Length; i++)
                 {
-                    //links[i] should be a segment of HTML
-                    link = links[i];
+                    //listItems[i] should be a segment of HTML
+                    listItem = listItems[i];
 
-                    //fuck null values of links, all my homies use empty strings
-                    if (link == null)
-                        link = "";
+                    //fuck null values of listItems, all my homies use empty strings
+                    if (listItem == null)
+                        listItem = "";
 
-                    //loop through each link, checking if it has one of the search words
-                    for (int l = 0; l < link.Length; l++)
+                    //loop through each listItem, checking if it has one of the search words
+                    for (int l = 0; l < listItem.Length; l++)
                     {
-                        for (int q = 0; q < LINK_SEARCH_KEYWORDS.Length; q++)
+                        for (int q = 0; q < itemSearchKeywords.Length; q++)
                         {
-                            //if the searched phrase is within the link string and the searched phrase is equal to the phrase found (.ToLower() to speed up logic)
-                            //is it possible for the searched keyword to be in the link?
+                            //if the searched phrase is within the listItem string and the searched phrase is equal to the phrase found (.ToLower() to speed up logic)
+                            //is it possible for the searched keyword to be in the listItem?
                             //is the substring.Lower at character l equal to the keyword?
-                            if (l + LINK_SEARCH_KEYWORDS[q].Length < link.Length && link.Substring(l, LINK_SEARCH_KEYWORDS[q].Length).ToLower() == LINK_SEARCH_KEYWORDS[q])
+                            if (l + itemSearchKeywords[q].Length < listItem.Length && listItem.Substring(l, itemSearchKeywords[q].Length).ToLower() == itemSearchKeywords[q])
                             {
-                                //look for first link tag by going through detected html backwards
-                                for (int j = link.Length - 5 - 1; j >= 0; j--)
+                                //look for first listItem tag by going through detected html backwards
+                                for (int j = listItem.Length - 5 - 1; j >= 0; j--)
                                 {
-                                    if (link.Substring(j, 5) == "href=")
+                                    foreach (String parsingKeyWord in parsingKeyWords)
                                     {
-                                        //start reading the URL after the phrase above
-                                        startIndex = j + 6;
-
-                                        int k = 0;
-                                        while (k < link.Length - startIndex - 1)
+                                        //"href=" and "src=" originally, lengths may need to be refactored further
+                                        if (listItem.Substring(j, parsingKeyWord.Length) == parsingKeyWord)
                                         {
-                                            //break at the closing " in the html, signifying the end of the HTML
-                                            //I'm leaving in the null test because I think the compiler gets mad at me when it's not there
-                                            if (link[startIndex + k + 1] != null && link[startIndex + k + 1] == '"')
-                                                break;
-                                            k++;
+                                            //start reading the URL after the phrase above
+                                            startIndex = j + parsingKeyWord.Length + 1;
+
+                                            int k = 0;
+                                            while (k < listItem.Length - startIndex - 1 && listItem[startIndex + k + 1] != null)
+                                            {
+                                                //break at the closing " in the html, signifying the end of the HTML
+                                                //I'm leaving in the null test because I think the compiler gets mad at me when it's not there
+                                                if (listItem[startIndex + k + 1] != null && listItem[startIndex + k + 1] == '"')
+                                                    break;
+                                                k++;
+                                            }
+                                            //if this is being written a ton of times, something is wrong
+                                            Console.WriteLine("Found item " + item);
+                                            item = listItem.Substring(startIndex, k + 1);
+                                            doBreakception = true;
+                                            break;
                                         }
-
-                                        contact = link.Substring(startIndex, k + 1);
-                                        doBreakception = true;
-                                        break;
                                     }
-                                    else if (link.Substring(j, 4) == "src=")
-                                    {
-                                        startIndex = j + 5 + 1;
-
-                                        int k = 0;
-                                        while (k < link.Length - startIndex - 1 && link[startIndex + k + 1] != null)
-                                        {
-                                            //break at the closing " in the html, signifying the end of the HTML
-                                            if (link[startIndex + k + 1] != null && link[startIndex + k + 1] == '"')
-                                                break;
-                                            k++;
-                                        }
-
-                                        contact = link.Substring(startIndex, k + 1);
-                                        doBreakception = true;
+                                    if (doBreakception)
                                         break;
-                                    }
                                 }
                             }
                             if (doBreakception)
@@ -918,44 +925,44 @@ namespace First_Webcrawler
                     }
                 }
 
-                string tempContact = contact;
+                string tempItem = item;
                 string baseURL = URLs[URLIndex];
 
                 //check to make sure the url about to be returned is valid, and if it isn't make the returned url reflect that
-                if (contact.Length >= 4 && contact.Substring(0, 4) != "http") {
-                    //check all possible link extensions
+                if (item.Length >= 4 && item.Substring(0, 4) != "http") {
+                    //check all possible listItem extensions
                     for (int i = 0; i < URL_TYPE_EXTENSIONS.Length; i++)
                     {
-                        //if the contact ends with a URL_TYPE_EXTENSION from URL_TYPE_EXTENSIONS
-                        if (contact.Substring(contact.Length - URL_TYPE_EXTENSIONS[i].Length, URL_TYPE_EXTENSIONS[i].Length) == URL_TYPE_EXTENSIONS[i]) {
-                            tempContact = contact;
+                        //if the item ends with a URL_TYPE_EXTENSION from URL_TYPE_EXTENSIONS
+                        if (item.Substring(item.Length - URL_TYPE_EXTENSIONS[i].Length, URL_TYPE_EXTENSIONS[i].Length) == URL_TYPE_EXTENSIONS[i]) {
+                            tempItem = item;
                             break;
                         }
-                        tempContact = "The contacts page url that I was going to return was not valid";
+                        tempItem = "The items page url that I was going to return was not valid";
                     }
 
-                    //check if the contact url is a local link and convert it to a URL if it is, making sure to add a "/"
-                    //if (contact != "The contacts page url that I was going to return was not valid")
-                    //    tempContact = baseURL.Substring(0, baseURL.LastIndexOf("")) + tempContact;
-                    if (contact.LastIndexOf("/") == -1)
-                        return prepBaseURL(baseURL) + "/" + contact;
-                    else if (contact.Substring(0, 1) == "/")
-                        tempContact = prepBaseURL(baseURL);
-                    else if (contact.Substring(0, 2) == "./")
-                        tempContact = prepBaseURL(baseURL) + contact.Substring(1);
+                    //check if the item url is a local listItem and convert it to a URL if it is, making sure to add a "/"
+                    //if (item != "The items page url that I was going to return was not valid")
+                    //    tempItem = baseURL.Substring(0, baseURL.LastIndexOf("")) + tempItem;
+                    if (item.LastIndexOf("/") == -1)
+                        return prepBaseURL(baseURL) + "/" + item;
+                    else if (item.Substring(0, 1) == "/")
+                        tempItem = prepBaseURL(baseURL);
+                    else if (item.Substring(0, 2) == "./")
+                        tempItem = prepBaseURL(baseURL) + item.Substring(1);
                 }
 
-                contact = tempContact;
+                item = tempItem;
 
-                return contact;
+                return item;
             }
             catch (IndexOutOfRangeException)
             {
-                return "link index went out of bounds on line 707";
+                return "listItem index went out of bounds on line 707";
             }
             catch (NullReferenceException)
             {
-                return "link value at index was null on line 722";
+                return "listItem value at index was null on line 722";
             }
         }
 
