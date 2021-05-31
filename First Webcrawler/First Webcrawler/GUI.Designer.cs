@@ -14,7 +14,7 @@ using System.IO;
 /*
  * Agenda:
  * **************************************************************************************************************************************************
- * Do this for the workshops list before all others --> The parseContactWithKeywordLocation method needs to parse the correct info, not necessarily the first contact info. Maybe do this by implementing a refactored version of link collection and scanning method?
+ * Do this for the workshops list before all others --> The code around line 720, where the parseContactWithKeywordLocation method is called, needs to parse the correct info, not necessarily the first contact info. (Maybe compile a list of possible contact info and then go through them, checking validity somehow?)
  * For some reason about pages are still being prioritized by the crawler over contact pages in either the link analysis section or the brute force section (maybe  it's finding about link before contact link on main page?)
  * The lower methods need corrections so that the webcrawler only collects the info corresponding to the selections in the GUI
  * If a source URL is empty, the crawler should just ignore it, not spend like 20 seconds "thinking about it"
@@ -69,10 +69,10 @@ namespace First_Webcrawler
         public static string[] contactURLs = new String[NUMBER_OF_ENTRIES];
         //when you inevitably increase the number of things in the array below, you'll have to make the one below it a 2D array and alter lines 137-145 to allow subsequent known URLs
         public static string[] KNOWN_CONTACT_URLS = { "https://sinwp.com/", "https://www.facebook.com/" };
-        public static String[] MAIN_PAGE_SEARCH_TAGS_START = { "<a ", "<button " };
-        public static String[] MAIN_PAGE_SEARCH_TAGS_END = { ">" };
+        public static String[] LINK_SEARCH_TAGS_START = { "<a ", "<button ", "< a ", "< button " };
+        public static String[] LINK_SEARCH_TAGS_END = { ">", "/>", "</" };
         //all lowercase to expedite searches
-        public static String[] LINK_SEARCH_KEYWORDS = { "contact", "about", "meet", "board", "coordinators" };
+        public static String[] LINK_SEARCH_KEYWORDS = { "contact", "about", "meet", "join", "board", "coordinators" };
         public static string[] KNOWN_CONTACT_URLS_LOCATOR_KEYPHRASES = { "web address:- <a href=", "" };
         public static string[] CONTACT_URL_PARSING_KEYWORDS = { "href=", "src=" };
 
@@ -342,7 +342,7 @@ namespace First_Webcrawler
 
         }
 
-        //                                                              End of source url gathering section, beginning of main page url locating/scraping section
+        //                                                              End of source url gathering section, beginning of main page and contact page url scraping section
         //*****************************************************************************************************************************************************************************************
 
         private void buttonLocateContacts_Click(object sender, EventArgs e)
@@ -351,113 +351,109 @@ namespace First_Webcrawler
             resetContactsSearchKeywordsArray();
 
             URLIndex = 0;
-            //loop through all the entries
-            while (URLIndex < NUMBER_OF_ENTRIES)
+            try
             {
-                try
+                //loop through all the entries
+                while (URLIndex < NUMBER_OF_ENTRIES)
                 {
-                    //loop through all the entries
-                    while (URLIndex < NUMBER_OF_ENTRIES)
+                    string url = URLs[URLIndex];
+                    string html = getHTML(url);
+                    String[] urlSearchPhrases = {""};
+
+                    //make sure the url is valid
+                    if (!(url == null || url == "") && (url.Length > 0))
                     {
-                        string url = URLs[URLIndex];
-                        string html = getHTML(url);
-                        String[] urlSearchPhrases = {""};
-
-                        //make sure the url is valid
-                        if (!(url == null || url == "") && (url.Length > 0))
+                        //sinwp
+                        //if the url is a known contact URL, set the contactURLs entry to the url provided by the known site
+                        if ((url.Length >= KNOWN_CONTACT_URLS[0].Length) && (url.Substring(0, KNOWN_CONTACT_URLS[0].Length) == KNOWN_CONTACT_URLS[0]))
                         {
-                            //sinwp
-                            //if the url is a known contact URL, set the contactURLs entry to the url provided by the known site
-                            if ((url.Length >= KNOWN_CONTACT_URLS[0].Length) && (url.Substring(0, KNOWN_CONTACT_URLS[0].Length) == KNOWN_CONTACT_URLS[0]))
-                            {
-                                urlSearchPhrases[0] = KNOWN_CONTACT_URLS_LOCATOR_KEYPHRASES[0];
+                            urlSearchPhrases[0] = KNOWN_CONTACT_URLS_LOCATOR_KEYPHRASES[0];
 
-                                //Show the webpage currently being read
-                                Console.WriteLine("");
-                                Console.WriteLine(URLIndex + rowOffset);
-                                Console.WriteLine("Oooh! I know this site!");
-                                Console.WriteLine("Source URL = " + URLs[URLIndex]);
-                                //set the URL at the current spot to that found at the known weppage
-                                URLs[URLIndex] = getURLFromHTML(html, urlSearchPhrases);
-                                Console.WriteLine("Main page URL = " + URLs[URLIndex]);
-                                //set the contacts page URL to the one found in the new webpage's HTML
-                                contactURLs[URLIndex] = getURLFromHTML(getHTML(URLs[URLIndex]), MAIN_PAGE_SEARCH_TAGS_START);
-                                Console.WriteLine("Contact page URL = " + contactURLs[URLIndex]);
+                            //Show the webpage currently being read
+                            Console.WriteLine("");
+                            Console.WriteLine(URLIndex + rowOffset);
+                            Console.WriteLine("Oooh! I know this site!");
+                            Console.WriteLine("Source URL = " + URLs[URLIndex]);
+                            //set the URL at the current spot to that found at the known weppage
+                            URLs[URLIndex] = getURLFromHTML(html, urlSearchPhrases);
+                            Console.WriteLine("Main page URL = " + URLs[URLIndex]);
+                            //set the contacts page URL to the one found in the new webpage's HTML
+                            contactURLs[URLIndex] = getURLFromHTML(getHTML(URLs[URLIndex]), LINK_SEARCH_TAGS_START);
+                            Console.WriteLine("Contact page URL = " + contactURLs[URLIndex]);
 
-                                Console.WriteLine("");
-                            }
-                            ////n4c.us
-                            ////otherwise if the url is a known contact URL, set the contactURLs entry to the url provided by the known site
-                            //else if ((url.Length >= KNOWN_CONTACT_URLS[1].Length) && (url.Substring(0, KNOWN_CONTACT_URLS[1].Length) == KNOWN_CONTACT_URLS[1]))
-                            //{
-                            //    urlSearchPhrases[0] = KNOWN_CONTACT_URLS_LOCATOR_KEYPHRASES[1];
-
-                            //    //Show the webpage currently being read
-                            //    Console.WriteLine("");
-                            //    Console.WriteLine(URLIndex + rowOffset);
-                            //    Console.WriteLine("Oooh! I know this site!");
-                            //    Console.WriteLine("Source URL = " + URLs[URLIndex]);
-                            //    //set the URL at the current spot to that found at the known weppage
-                            //    URLs[URLIndex] = getURLFromHTML(1, html, urlSearchPhrases);
-                            //    Console.WriteLine("Main page URL = " + URLs[URLIndex]);
-                            //    //set the contacts page URL to the one found in the new webpage's HTML
-                            //    contactURLs[URLIndex] = getURLFromHTML(-1, getHTML(URLs[URLIndex]), MAIN_PAGE_SEARCH_TAGS_START);
-                            //    Console.WriteLine("Contact page URL = " + contactURLs[URLIndex]);
-
-                            //    Console.WriteLine("");
-                            //}
-                            //if the url does not start with the url for a known club coalition site or is too short to read (but not empty) then read the HTML
-                            else
-                            {
-                                urlSearchPhrases[0] = KNOWN_CONTACT_URLS_LOCATOR_KEYPHRASES[0];
-
-                                //Show the webpage currently being read
-                                Console.WriteLine("");
-                                Console.WriteLine(URLIndex + rowOffset);
-                                Console.WriteLine("What a strange new site to see!");
-                                //since it's an unknown, and thus, assumed to be the main page of the club, searching for the URL isn't necessary, as we already have it
-                                Console.WriteLine("Main page URL = " + URLs[URLIndex]);
-                                //set the contacts page URL to the one found in the new webpage's HTML
-                                contactURLs[URLIndex] = getURLFromHTML(html, MAIN_PAGE_SEARCH_TAGS_START);
-                                Console.WriteLine("Contact page URL = " + contactURLs[URLIndex]);
-
-                                Console.WriteLine("");
-                            }
+                            Console.WriteLine("");
                         }
+                        ////n4c.us
+                        ////otherwise if the url is a known contact URL, set the contactURLs entry to the url provided by the known site
+                        //else if ((url.Length >= KNOWN_CONTACT_URLS[1].Length) && (url.Substring(0, KNOWN_CONTACT_URLS[1].Length) == KNOWN_CONTACT_URLS[1]))
+                        //{
+                        //    urlSearchPhrases[0] = KNOWN_CONTACT_URLS_LOCATOR_KEYPHRASES[1];
+
+                        //    //Show the webpage currently being read
+                        //    Console.WriteLine("");
+                        //    Console.WriteLine(URLIndex + rowOffset);
+                        //    Console.WriteLine("Oooh! I know this site!");
+                        //    Console.WriteLine("Source URL = " + URLs[URLIndex]);
+                        //    //set the URL at the current spot to that found at the known weppage
+                        //    URLs[URLIndex] = getURLFromHTML(1, html, urlSearchPhrases);
+                        //    Console.WriteLine("Main page URL = " + URLs[URLIndex]);
+                        //    //set the contacts page URL to the one found in the new webpage's HTML
+                        //    contactURLs[URLIndex] = getURLFromHTML(-1, getHTML(URLs[URLIndex]), LINK_SEARCH_TAGS_START);
+                        //    Console.WriteLine("Contact page URL = " + contactURLs[URLIndex]);
+
+                        //    Console.WriteLine("");
+                        //}
+                        //if the url does not start with the url for a known club coalition site or is too short to read (but not empty) then read the HTML
                         else
                         {
-                            contactURLs[URLIndex] = url;
+                            urlSearchPhrases[0] = KNOWN_CONTACT_URLS_LOCATOR_KEYPHRASES[0];
 
-                            Console.WriteLine("Empty source URL");
+                            //Show the webpage currently being read
                             Console.WriteLine("");
+                            Console.WriteLine(URLIndex + rowOffset);
+                            Console.WriteLine("What a strange new site to see!");
+                            //since it's an unknown, and thus, assumed to be the main page of the club, searching for the URL isn't necessary, as we already have it
+                            Console.WriteLine("Main page URL = " + URLs[URLIndex]);
+                            //set the contacts page URL to the one found in the new webpage's HTML
+                            contactURLs[URLIndex] = getURLFromHTML(html, LINK_SEARCH_TAGS_START);
+                            Console.WriteLine("Contact page URL = " + contactURLs[URLIndex]);
 
-                            //i think I'm doing this bit right
-                            URLs[URLIndex] = assembleGoogleURL();
+                            Console.WriteLine("");
                         }
-                        //increment the starting URLindex after an exception is seen so that it is incremented properly in the exception handlers
-                        URLIndex++;
                     }
+                    else
+                    {
+                        contactURLs[URLIndex] = url;
 
-                    Console.WriteLine("");
-                    Console.WriteLine("Finished getting sites' HTML/main page URLs");
-                    Console.WriteLine("");
-                }
-                ////catch the null argument exception and let user try again, starting at the next URL
-                //catch (ArgumentNullException ex)
-                //{
-                //    Console.WriteLine("Null Argument Exception caught, try again.");
-                //    Console.WriteLine("");
-                //    contactURLs[URLIndex] = getURLFromHTML(-1, "", MAIN_PAGE_SEARCH_TAGS_START);
-                //    URLIndex++;
-                //}
-                //catch the web exception and let user start again, starting at the next URL
-                catch (WebException)
-                {
-                    Console.WriteLine("WebException caused by url being: " + contactURLs[URLIndex]);
-                    contactURLs[URLIndex] = getURLFromHTML("", MAIN_PAGE_SEARCH_TAGS_START);
+                        Console.WriteLine("Empty source URL");
+                        Console.WriteLine("");
+
+                        //i think I'm doing this bit right
+                        URLs[URLIndex] = assembleGoogleURL();
+                    }
+                    //increment the starting URLindex after an exception is seen so that it is incremented properly in the exception handlers
                     URLIndex++;
-                    Console.WriteLine("");
                 }
+
+                Console.WriteLine("");
+                Console.WriteLine("Finished getting sites' URLs");
+                Console.WriteLine("");
+            }
+            ////catch the null argument exception and let user try again, starting at the next URL
+            //catch (ArgumentNullException ex)
+            //{
+            //    Console.WriteLine("Null Argument Exception caught, try again.");
+            //    Console.WriteLine("");
+            //    contactURLs[URLIndex] = getURLFromHTML(-1, "", LINK_SEARCH_TAGS_START);
+            //    URLIndex++;
+            //}
+            //catch the web exception and let user start again, starting at the next URL
+            catch (WebException)
+            {
+                Console.WriteLine("WebException caused by url being: " + contactURLs[URLIndex]);
+                contactURLs[URLIndex] = getURLFromHTML("", LINK_SEARCH_TAGS_START);
+                URLIndex++;
+                Console.WriteLine("");
             }
         }
 
@@ -514,7 +510,7 @@ namespace First_Webcrawler
 
         private static string getURLFromHTML(string html, string[] searchTagsStart)
         {
-            string[] links = getHTMLSegments(html, searchTagsStart, MAIN_PAGE_SEARCH_TAGS_END);
+            string[] links = getHTMLSegments(html, searchTagsStart, LINK_SEARCH_TAGS_END);
 
             Console.WriteLine("Found " + links.Length + " links");
             Console.WriteLine("first 3 values of links array:");
@@ -566,7 +562,7 @@ namespace First_Webcrawler
                 while (!endOfBody && !foundContact && segmentCounter < segments.Length)
                 {
                     //read through all of the search keywords
-                    for (int j = 0; j < MAIN_PAGE_SEARCH_TAGS_END.Length; j++)
+                    for (int j = 0; j < searchTagsEnd.Length; j++)
                     {
                         //makes a list (segments array) of <a> blocks (<a> and <button> blocks) to go through and store them in the segments array
                         //if the site's HTML includes the keywords somewhere, look nearby it for the URL of the contacts page
@@ -575,9 +571,9 @@ namespace First_Webcrawler
                             //i is the starting spot of each link and k is the ending spot
 
                             //find the <a> and <button> blocks
-                            //look through subsequent html for closing <a> tag, and when it's found, set k to it
+                            //look through subsequent html for closing <a> or <button> tag, and when it's found, set k to it
                             int k = i;
-                            while (j < MAIN_PAGE_SEARCH_TAGS_END.Length && html.Substring(k, MAIN_PAGE_SEARCH_TAGS_END[j].Length) != (MAIN_PAGE_SEARCH_TAGS_END[j]))
+                            while (j < searchTagsEnd.Length && html.Substring(k, searchTagsEnd[j].Length) != (searchTagsEnd[j]))
                                 k++;
 
                             //add another link as an entry to the array of segments to go through
@@ -614,7 +610,7 @@ namespace First_Webcrawler
             }
         }
 
-        //                                                              End of main page url locating/scraping section, beginning of contact locating/scraping section
+        //                                                              End of main page and contact page url scraping section, beginning of contact scraping section
         //*****************************************************************************************************************************************************************************************
 
         private void buttonReadSites_Click(object sender, EventArgs e)
@@ -717,7 +713,7 @@ namespace First_Webcrawler
                                         String contact = "No " + CONTACTS_PAGE_SEARCH_KEYWORDS[j, 0].ToUpper() + " found";
 
                                         //maybe modify contact text in case extra text further is included in parsing
-                                        //**********************************************************************************************************                   CONTINUE HERE (SEE BELOW STATEMENT FOR FURTHER GUIDANCE)
+                                        //*********************************************************************************************************                   CONTINUE HERE (SEE BELOW STATEMENT FOR FURTHER GUIDANCE)
                                         //needs to find ALL possible contact information, not just one, then decide which one is the most likely contact info.
                                         contact = parseContactWithKeywordLocation(html, CONTACTS_PAGE_SEARCH_KEYWORDS[j, k], i);
                                         contactInfo[URLIndex, j] = contact;
@@ -1202,7 +1198,7 @@ namespace First_Webcrawler
             return "The URLIndex was larger than the number of entries being read";
         }
 
-        //                                                                               End of contact locating/scraping section, beginning of contact info writing section
+        //                                                                               End of contact scraping section, beginning of contact info writing section
         //*************************************************************************************************************************************************************************
 
         private void buttonWriteContacts_Click(object sender, EventArgs e)
