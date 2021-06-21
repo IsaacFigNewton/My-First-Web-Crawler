@@ -80,9 +80,11 @@ namespace First_Webcrawler
         //if the website's link goes to something including one of the following phrases(paired with an extension from the URL_TYPE_EXTENSIONS list), just remove it and then brute force the contact URL with the following extension words/phrases
         public static String[] URL_REMOVE_EXTENSIONS = { "Index", "index", "Home", "home", "Default", "default", "Welcome", "welcome" };
         //in case the scraper can't get the contact page for whatever reason, use the below information to brute force the contact URL
-        public static String[] URL_PRE_EXTENSIONS = { "", "#", "about/", "Club/", "info/", "page/" };
-        public static String[] URL_EXTENSIONS = { "contact", "contact-us", "contact_us", "Contact", "contactus", "ContactUs", "contact_us", "contact-form", "contactform", "Contact-Us", "about-us", "about", "join-us", "About-Us" };
-        public static String[] URL_EXTENSION_EXTENSIONS = { "", "2", "-2" };
+        public static String[] URL_PRE_EXTENSIONS = { "/", "#", "about/", "Club/", "info/", "page/" };
+        public static String[] URL_MAIN_EXTENSION = { "contact", "Contact", "about", "About", "join" };
+        public static String[] URL_EXTENSION1 = { "", "-", "_",};
+        public static String[] URL_EXTENSION2 = { "", "us", "Us", "form" };
+        public static String[] URL_EXTENSION3 = { "", "2" };
         public static String[] URL_TYPE_EXTENSIONS = { "", ".html", ".htm", ".aspx", ".php", ".shtml", ".asp" };
         //if unable to find contact page this way, look for facebook link, go there, and then append "about"
 
@@ -212,6 +214,19 @@ namespace First_Webcrawler
                 //CONTACTS_PAGE_SEARCH_KEYWORDS[3, 2] = "2018";
                 //CONTACTS_PAGE_SEARCH_KEYWORDS[3, 3] = "2017";
             }
+
+            ////alter respective other search word entries
+            //if (checkBoxIsChecked[4])
+            //{
+            //    CONTACTS_PAGE_SEARCH_KEYWORDS[4, 0] = "meet";
+            //    CONTACTS_PAGE_SEARCH_KEYWORDS[4, 1] = "Ave";
+            //    CONTACTS_PAGE_SEARCH_KEYWORDS[4, 2] = "Rd";
+            //    CONTACTS_PAGE_SEARCH_KEYWORDS[4, 3] = "Ln";
+            //    //CONTACTS_PAGE_SEARCH_KEYWORDS[4, 0] = "maximum";
+            //    //CONTACTS_PAGE_SEARCH_KEYWORDS[4, 1] = "participants";
+            //    //CONTACTS_PAGE_SEARCH_KEYWORDS[4, 2] = "size";
+            //    //CONTACTS_PAGE_SEARCH_KEYWORDS[4, 3] = "group";
+            //}
 
             //set all CONTACTS_PAGE_SEARCH_KEYWORDs to lowercase
             for (int i = 0; i < NUMBER_OF_CONTACT_PAGE_SEARCH_KEYWORDS; i++)
@@ -363,63 +378,32 @@ namespace First_Webcrawler
                     //make sure the url is valid
                     if (!(url == null || url == "") && (url.Length > 0))
                     {
-                        //sinwp
-                        //if the url is a known contact URL, set the contactURLs entry to the url provided by the known site
-                        if ((url.Length >= KNOWN_CONTACT_URLS[0].Length) && (url.Substring(0, KNOWN_CONTACT_URLS[0].Length) == KNOWN_CONTACT_URLS[0]))
+                        urlSearchPhrases[0] = KNOWN_CONTACT_URLS_LOCATOR_KEYPHRASES[0];
+
+                        //Show the webpage currently being read
+                        Console.WriteLine("");
+                        Console.WriteLine(URLIndex + rowOffset);
+                        Console.WriteLine("What a strange new site to see!");
+                        //since it's an unknown, and thus, assumed to be the main page of the club, searching for the URL isn't necessary, as we already have it
+                        Console.WriteLine("Main page URL = " + URLs[URLIndex]);
+
+                        //try to get the contact page URL specifically, and if unavailable, then try to get another likely contact page URL
+                        //set the contacts page URL to the one found in the new webpage's HTML
+                        contactURLs[URLIndex] = getURLFromHTML(getHTML(URLs[URLIndex]), LINK_SEARCH_TAGS_START);
+                        //if the scraped contact page URL doesn't have the keyword "contact" in it
+                        if (contactURLs[URLIndex].ToLower().LastIndexOf("contact") < 0)
                         {
-                            urlSearchPhrases[0] = KNOWN_CONTACT_URLS_LOCATOR_KEYPHRASES[0];
-
-                            //Show the webpage currently being read
-                            Console.WriteLine("");
-                            Console.WriteLine(URLIndex + rowOffset);
-                            Console.WriteLine("Oooh! I know this site!");
-                            Console.WriteLine("Source URL = " + URLs[URLIndex]);
-                            //set the URL at the current spot to that found at the known weppage
-                            URLs[URLIndex] = getURLFromHTML(html, urlSearchPhrases);
-                            Console.WriteLine("Main page URL = " + URLs[URLIndex]);
-                            //set the contacts page URL to the one found in the new webpage's HTML
-                            contactURLs[URLIndex] = getURLFromHTML(getHTML(URLs[URLIndex]), LINK_SEARCH_TAGS_START);
-                            Console.WriteLine("Contact page URL = " + contactURLs[URLIndex]);
-
-                            Console.WriteLine("");
+                            //try the brute force method, stopping when it reaches the list entry after the last version of the "contact" keyword
+                            String bruteForcedURL = tryBruteForce(URLs[URLIndex], 2);
+                            //if the brute force method returns a url that contains the keyword, use that as the contact page url
+                            if (bruteForcedURL.ToLower().LastIndexOf("contact") > 0)
+                                contactURLs[URLIndex] = bruteForcedURL;
+                            //otherwise leave it as is and accept that you can't get 'em all right
                         }
-                        ////n4c.us
-                        ////otherwise if the url is a known contact URL, set the contactURLs entry to the url provided by the known site
-                        //else if ((url.Length >= KNOWN_CONTACT_URLS[1].Length) && (url.Substring(0, KNOWN_CONTACT_URLS[1].Length) == KNOWN_CONTACT_URLS[1]))
-                        //{
-                        //    urlSearchPhrases[0] = KNOWN_CONTACT_URLS_LOCATOR_KEYPHRASES[1];
 
-                        //    //Show the webpage currently being read
-                        //    Console.WriteLine("");
-                        //    Console.WriteLine(URLIndex + rowOffset);
-                        //    Console.WriteLine("Oooh! I know this site!");
-                        //    Console.WriteLine("Source URL = " + URLs[URLIndex]);
-                        //    //set the URL at the current spot to that found at the known weppage
-                        //    URLs[URLIndex] = getURLFromHTML(1, html, urlSearchPhrases);
-                        //    Console.WriteLine("Main page URL = " + URLs[URLIndex]);
-                        //    //set the contacts page URL to the one found in the new webpage's HTML
-                        //    contactURLs[URLIndex] = getURLFromHTML(-1, getHTML(URLs[URLIndex]), LINK_SEARCH_TAGS_START);
-                        //    Console.WriteLine("Contact page URL = " + contactURLs[URLIndex]);
+                        Console.WriteLine("Contact page URL = " + contactURLs[URLIndex]);
 
-                        //    Console.WriteLine("");
-                        //}
-                        //if the url does not start with the url for a known club coalition site or is too short to read (but not empty) then read the HTML
-                        else
-                        {
-                            urlSearchPhrases[0] = KNOWN_CONTACT_URLS_LOCATOR_KEYPHRASES[0];
-
-                            //Show the webpage currently being read
-                            Console.WriteLine("");
-                            Console.WriteLine(URLIndex + rowOffset);
-                            Console.WriteLine("What a strange new site to see!");
-                            //since it's an unknown, and thus, assumed to be the main page of the club, searching for the URL isn't necessary, as we already have it
-                            Console.WriteLine("Main page URL = " + URLs[URLIndex]);
-                            //set the contacts page URL to the one found in the new webpage's HTML
-                            contactURLs[URLIndex] = getURLFromHTML(html, LINK_SEARCH_TAGS_START);
-                            Console.WriteLine("Contact page URL = " + contactURLs[URLIndex]);
-
-                            Console.WriteLine("");
-                        }
+                        Console.WriteLine("");
                     }
                     else
                     {
@@ -1029,7 +1013,7 @@ namespace First_Webcrawler
             return foundURL;
         }
 
-        private static String tryBruteForce(String url)
+        private static String tryBruteForce(String url, int stopAtMainExtensionIndex)
         {
             //find contacts page url given the main page url
             string baseURL = url;
@@ -1052,21 +1036,36 @@ namespace First_Webcrawler
             //brute force all possible contact urls until one works
             for (int i = 0; i < URL_PRE_EXTENSIONS.Length; i++)
             {
-                for (int j = 0; j < URL_EXTENSIONS.Length; j++)
+                for (int j = 0; j < URL_MAIN_EXTENSION.Length; j++)
                 {
-                    for (int k = 0; k < URL_EXTENSION_EXTENSIONS.Length; k++)
+                    for (int k = 0; k < URL_EXTENSION1.Length; k++)
                     {
-                        for (int l = 0; l < URL_TYPE_EXTENSIONS.Length; l++)
+                        for (int l = 0; l < URL_EXTENSION2.Length; l++)
                         {
-                            foundURL = prepBaseURL(baseURL) + URL_PRE_EXTENSIONS[i] + URL_EXTENSIONS[j] + URL_EXTENSION_EXTENSIONS[k] + URL_TYPE_EXTENSIONS[l];
-                            if (!(getHTML(foundURL) == ""))
-                                break;
+                            for (int m = 0; m < URL_EXTENSION3.Length; m++)
+                            {
+                                for (int n = 0; n < URL_TYPE_EXTENSIONS.Length; n++)
+                                {
+                                    //if NOT(one of the intermediate string from the URL_EXTENSION1 list is currently chosen and the string from the URL_EXTENSION2 list is empty) DO this url check
+                                    if (!(k > 0 && l == 0))
+                                    {
+                                        foundURL = prepBaseURL(baseURL) + URL_PRE_EXTENSIONS[i] + URL_MAIN_EXTENSION[j] + URL_EXTENSION1[k] + URL_EXTENSION2[l] + URL_EXTENSION3[m] + URL_TYPE_EXTENSIONS[n];
+                                        //if the stopping location is hit and no correct contact url is found
+                                        if (j == stopAtMainExtensionIndex)
+                                            return "";
+                                        //if the attempted URL is correct
+                                        if (!(getHTML(foundURL) == ""))
+                                            return foundURL;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            return foundURL;
+            //if a correct contact url is never found
+            return "";
         }
 
         private static String checkLenseLab()
