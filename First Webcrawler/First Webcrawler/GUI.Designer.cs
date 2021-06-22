@@ -15,7 +15,6 @@ using System.IO;
  * Agenda:
  * **************************************************************************************************************************************************
  * Do this for the workshops list before all others --> The code around line 720, where the parseContactWithKeywordLocation method is called, needs to parse the correct info, not necessarily the first contact info. (Maybe compile a list of possible contact info and then go through them, checking validity somehow?)
- * For some reason about pages are still being prioritized by the crawler over contact pages in either the link analysis section or the brute force section (maybe  it's finding about link before contact link on main page?)
  * The lower methods need corrections so that the webcrawler only collects the info corresponding to the selections in the GUI
  * If a source URL is empty, the crawler should just ignore it, not spend like 20 seconds "thinking about it"
  * When the crawler reads source URLs from workbook, make it so it reads hyperlinks, then the text if a hyperlink is unavailable, see IronXL docs for help: https://ironsoftware.com/csharp/excel/object-reference/api/IronXL.Cell.html
@@ -32,9 +31,9 @@ namespace First_Webcrawler
     {
         //                                                                  File Reading Class Variables
         //Row counting vars
-        public static int NUMBER_OF_ENTRIES = 10;
+        public static int NUMBER_OF_ENTRIES = 20;
         //default offset should be 1, for headers
-        public static int rowOffset = 35;
+        public static int rowOffset = 1;
         //set URLIndex to rowOffset so that's where it starts
         public static int URLIndex = 0;
 
@@ -237,8 +236,8 @@ namespace First_Webcrawler
             Console.WriteLine("");
             for (int i = 0; i < NUMBER_OF_CONTACT_PAGE_SEARCH_KEYWORDS; i++)
             {
-                //if the first entry in a CONTACTS_PAGE_SEARCH_KEYWORDS array is the impossible frase, then it will just write to the console that that checkbox is unchecked
-                if (CONTACTS_PAGE_SEARCH_KEYWORDS[i, 0].Equals(impossibleSearchPhrase))
+                //if the checkbox in question is unchecked, print to the console that it's unchecked
+                if (!checkBoxIsChecked[i])
                     Console.WriteLine("Checkbox number " + (i + 1) + " is unchecked." + "\n");
                 //if for whatever reason the list hasn't been updated yet, say so
                 else if (CONTACTS_PAGE_SEARCH_KEYWORDS[i, 0] == null)
@@ -556,7 +555,8 @@ namespace First_Webcrawler
 
                             //find the <a> and <button> blocks
                             //look through subsequent html for closing <a> or <button> tag, and when it's found, set k to it
-                            int k = i;
+                            int k = i+0;
+                            Console.WriteLine("ArgumentOutOfRange exception caused by the line of code below (Line 560)");
                             while (j < searchTagsEnd.Length && html.Substring(k, searchTagsEnd[j].Length) != (searchTagsEnd[j]))
                                 k++;
 
@@ -676,7 +676,7 @@ namespace First_Webcrawler
                             //read through all of CONTACTS_PAGE_SEARCH_KEYWORDS arrays
                             for (int j = 0; j < NUMBER_OF_CONTACT_TYPES; j++)
                             {
-                                //skip values of j that correspond to unwanted contact types
+                                //skip values of j that correspond to unwanted contact types (==false instead of ! for purposes of legibility)
                                 if (j == 0 && checkBoxIsChecked[0] == false)
                                     j++;
                                 if (j == 1 && checkBoxIsChecked[1] == false)
@@ -908,18 +908,23 @@ namespace First_Webcrawler
             return newBaseURL;
         }
 
+        //Note: following method gathers multiple starting and ending indices for potential contact information and returns the two corresponding with the shortest length contact information string (Yes I know this only works for short segments of contact info. but it should work well enough to get emails)
         private static String parseContactWithKeywordLocation(String html, String keyword, int keywordIndexInHTML )
         {
             //reset the class variable so no old values carry over
             string [] contactSegments = new string[10000];
 
-            String[] parsingPhrasesStart = { " ", "mailto:", ">" };
-            String[] parsingPhrasesEnd = { "</", "< /", "?subject=" };
+            String[] parsingPhrasesStart = { " ", "mailto:", "\"", ">" };
+            String[] parsingPhrasesEnd = { "\"", "<", "?subject=" };
             ////offset so that the contact info. text phrase starts on the right word/phrase
             //int offset = 4;
-            int contactIndexStart = keywordIndexInHTML + keyword.Length + 1;
-            int contactIndexEnd = -1;
-            Boolean doBreakception = false;
+            //Lists of possible contact start and end indices (Lengths correspond to the number of possible indices)
+            int[] contactIndicesStart = new int[parsingPhrasesStart.Length];
+            for (int i = 0; i < contactIndicesStart.Length; i++)
+                contactIndicesStart[i] = keywordIndexInHTML;
+            int[] contactIndicesEnd = new int[parsingPhrasesEnd.Length];
+            for (int i = 0; i < contactIndicesEnd.Length; i++)
+                contactIndicesEnd[i] = -1;
 
             //keyword location
             //A type 1 statistical error in this case would be less severe than a type 2, as we'd still get the contact info if it were unclear whether or not the keyword was in the contact info
@@ -930,15 +935,13 @@ namespace First_Webcrawler
             if (html[keywordIndexInHTML-1].Equals(" "))
                 keywordAtStartOfContact = true;
 
-            doBreakception = false;
-            //go through all start parsing phrases to find the contact info start index, if the keyword is in the middle of the contact info (ex: example@domain.com)
+            //go through all start parsing phrases to find the contact info start indices if the keyword is in the middle of the contact info (ex: example@domain.com)
             if (!keywordAtStartOfContact)
                 //go through all start parsing phrases to determine if the end of the contact info has been found
-                foreach (String startParsingPhrase in parsingPhrasesStart)
+                for (int i = 0; i < parsingPhrasesStart.Length; i++)
                 {
-                    //go through all characters in html before the keyword
-                    int i = keywordIndexInHTML;
-                    while ( i > keyword.Length)
+                    //go through all characters in html before the keyword where a keyword can still be searched
+                    for(int j = keywordIndexInHTML - 1; j > keyword.Length; j--)
                     {
                         //any starting index exceptions
                         ////exception for keyword "$" [0, 0]
@@ -946,28 +949,21 @@ namespace First_Webcrawler
                         //    //set the start index to the index of the keyword, since that's how it should be formatted (+0 so memory location definitions aren't changed)
                         //    contactStartIndex = keywordIndexInHTML + 0;
 
-                        //if the character at index i is equal to one of the parsing phrases from list (.ToLower() to speed up search)
-                        if (html.ToLower().Substring(i, startParsingPhrase.Length).Equals(startParsingPhrase))
+                        //if the string at index i is equal to one of the parsing phrases from list (.ToLower() to speed up search)
+                        if (html.ToLower().Substring(j, parsingPhrasesStart[i].Length).Equals(parsingPhrasesStart[i]))
                         {
-                            //set the end index to the index after the current character (the current character is the parsing character)
-                            contactIndexStart = i;
-                            doBreakception = true;
+                            //set the end index to the index after the current parsing phrase
+                            contactIndicesStart[i] = j;// + parsingPhrasesStart[i].Length - 1;
                             break;
                         }
-
-                        i--;
                     }
-
-                    if (doBreakception)
-                        break;
                 }
 
-            doBreakception = false;
-            //go through all end parsing phrases to find the contact info end index
-            foreach (String endParsingPhrase in parsingPhrasesEnd)
+            //go through all end parsing phrases to find the contact info end indices
+            for (int i = 0; i < parsingPhrasesEnd.Length; i++)
             {
                 //go through all characters in html after the keyword
-                for (int i = keywordIndexInHTML + keyword.Length; i < html.Length - endParsingPhrase.Length; i++)
+                for (int j = keywordIndexInHTML + keyword.Length; j < html.Length - parsingPhrasesEnd[i].Length; j++)
                 {
                     //any ending index exceptions
                     ////exception for keyword "$" [0, 0]
@@ -976,29 +972,40 @@ namespace First_Webcrawler
                     //    contactStartIndex = keywordIndexInHTML + 0;
 
                     //if the phrase at index i is equal to one of the parsing phrases from list (.ToLower() to speed up search)
-                    if (html.ToLower().Substring(i, endParsingPhrase.Length).Equals(endParsingPhrase))
+                    if (html.ToLower().Substring(j, parsingPhrasesEnd[i].Length).Equals(parsingPhrasesEnd[i]))
                     {
-                        //set the end index to the index after the current character (the current character is the parsing character)
-                        contactIndexEnd = i;
-                        doBreakception = true;
+                        //set the end index to the index at the current parsing phrase
+                        contactIndicesEnd[i] = j+0;
                         break;
                     }
                 }
-
-                if (doBreakception)
-                    break;
             }
+
+            //get the largest valid start index and smallest valid end index around the contact information
+            int startIndex = -1;
+            foreach (int contactIndexStart in contactIndicesStart)
+                //if the start of the contact information is at the index where or before where the keyword was found and is greater than the previous startIndex value, set it as the new startIndex
+                if (contactIndexStart <= keywordIndexInHTML && contactIndexStart > startIndex)
+                    startIndex = contactIndexStart + 0;
+            int endIndex = html.Length;
+            foreach (int contactIndexEnd in contactIndicesEnd)
+                //if the end of the contact information is after the startIndex and is less than the previous startIndex value, set it as the new endIndex
+                if (contactIndexEnd > startIndex && contactIndexEnd < endIndex)
+                    endIndex = contactIndexEnd + 0;
+
+            //add 1 to exclode
+            startIndex++;
 
             //return the contact info
             //Note: there was an issue where the previous code would get a good string, but for whatever reason contactIndexEnd < contactIndexStart
             //&& contactIndexEnd > contactIndexStart
-            if (contactIndexEnd > 0 )
-            {
-                Console.WriteLine("Character at contactIndexStart (" + contactIndexStart + "): " + html[contactIndexStart]);
-                Console.WriteLine("Character at contactIndexStart (" + contactIndexEnd + "): " + html[contactIndexEnd]);
+            //if (contactIndexEnd > 0 )
+            //{
+                Console.WriteLine("Character at contactIndexStart (" + startIndex + "): " + html[startIndex]);
+                Console.WriteLine("Character at contactIndexEnd (" + endIndex + "): " + html[endIndex]);
                 Console.WriteLine("");
-                return html.Substring(contactIndexStart, contactIndexEnd - contactIndexStart);
-            }
+                return html.Substring(startIndex, endIndex - startIndex);
+            //}
 
             //if it couldn't find an end index
             return "Couldn't parse the text after the contact information keyword.";
